@@ -30,3 +30,26 @@ fn f2c(f: f64) -> f64 {
 fn c2f(c: f64) -> f64 {
     c / 5.0 * 9.0 + 32.0
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn freezing() {
+        assert_eq!(f2c(32.0), 0.0);
+        assert_eq!(c2f(0.0), 32.0);
+    }
+
+    #[test]
+    fn negative_forty() {
+        assert_eq!(f2c(-40.0), -40.0);
+        assert_eq!(c2f(-40.0), -40.0);
+    }
+
+    #[test]
+    fn boiling() {
+        assert_eq!(f2c(212.0), 100.0);
+        assert_eq!(c2f(100.0), 212.0);
+    }
+}
