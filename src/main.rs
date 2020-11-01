@@ -1,22 +1,21 @@
-use rust_playground::Utilities;
-use std::{io, env};
+use rust_playground::{Utilities, cmd_args};
+use std::io;
 
 fn main() {
-    let mut args = env::args();
-    args.next(); // kill command name
-
     let utils = Utilities::new();
 
-    if let Some(n) = args.next() {
+    if let Some(n) = cmd_args().next() {
         match handle_input(&utils, &n) {
             Err(msg) => println!("{}", msg),
             Ok(_) => return,
         }
     }
+
     println!("Available utilities:");
     for (i, n) in utils.names().iter().enumerate() {
         println!(" {:2}) {}", i + 1, n)
     }
+
     loop {
         println!("Select a module (name or number, 'q' to quit): ");
         let mut input = String::new();
