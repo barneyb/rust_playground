@@ -1,7 +1,7 @@
 use crate::fs;
 use crate::cli;
 use crate::point2d::{Dir, Point};
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 pub fn run() {
     let wires: Vec<Vec<Step>> = fs::read_lines(
@@ -9,18 +9,25 @@ pub fn run() {
         parse_line
     ).unwrap();
 
-    let mut points = HashSet::new();
+    let mut points = HashMap::new();
+    let mut count = 0;
     walk_wire(&wires[0], |p| {
-        points.insert(p);
+        count += 1;
+        points.insert(p, count);
     });
 
-    let mut best = i32::max_value();
+    let mut closest = i32::max_value();
+    let mut fastest = i32::max_value();
+    count = 0;
     walk_wire(&wires[1], |p| {
-        if points.contains(&p) {
-            best = best.min(p.manhattan_distance())
+        count += 1;
+        if let Some(first_count) = points.get(&p) {
+            closest = closest.min(p.manhattan_distance());
+            fastest = fastest.min(first_count + count);
         }
     });
-    println!("closest intersection: {}", best);
+    println!("closest intersection: {} steps", closest);
+    println!("fastest intersection: {} steps", fastest);
 }
 
 fn walk_wire<F>(wire: &Vec<Step>, mut f: F)
