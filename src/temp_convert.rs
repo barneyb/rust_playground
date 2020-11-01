@@ -12,12 +12,11 @@ pub fn run() {
         if "q\n" == input {
             break;
         }
-        let input: f64 = match input.trim().parse() {
-            Ok(n) => n,
-            Err(_) => {
-                println!("Try a number?");
-                continue;
-            }
+        let input: f64 = if let Ok(n) = input.trim().parse() {
+            n
+        } else {
+            println!("Try a number?");
+            continue
         };
         println!("{}F is {:.1}C, and {0}C is {:.1}F", input, f2c(input), c2f(input));
     }

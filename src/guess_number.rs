@@ -20,12 +20,11 @@ pub fn run() {
             break;
         }
 
-        let guess: u32 = match guess.trim().parse() {
-            Ok(n) => n,
-            Err(_) => {
-                println!("Try an integer?");
-                continue;
-            },
+        let guess: u32 = if let Ok(n) = guess.trim().parse() {
+            n
+        } else {
+            println!("Try an integer?");
+            continue
         };
 
         println!("You guessed: {}", guess);
