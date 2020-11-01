@@ -25,9 +25,9 @@ impl<'a> Utilities<'a> {
         // todo: fibonacci
         utilities.insert("temp", temp_convert::run);
         utilities.insert("guess", guess_number::run);
-        utilities.insert("AoC 2019-01", aoc_2019_01::run);
-        utilities.insert("AoC 2019-02", aoc_2019_02::run);
-        utilities.insert("AoC 2019-03", aoc_2019_03::run);
+        utilities.insert("aoc_2019_01", aoc_2019_01::run);
+        utilities.insert("aoc_2019_02", aoc_2019_02::run);
+        utilities.insert("aoc_2019_03", aoc_2019_03::run);
         let mut names: Vec<&str> = utilities.iter()
             .map(|(k, _)| *k)
             .collect();
