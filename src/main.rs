@@ -8,8 +8,9 @@ fn main() {
     let utils = Utilities::new();
 
     if let Some(n) = args.next() {
-        if let AndThen::Exit() = handle_input(&utils, &n) {
-            return;
+        match handle_input(&utils, &n) {
+            Err(msg) => println!("{}", msg),
+            Ok(_) => return,
         }
     }
     println!("Available utilities:");
@@ -22,16 +23,16 @@ fn main() {
         match io::stdin().read_line(&mut input) {
             Err(_) => continue,
             Ok(_) => match handle_input(&utils, &input) {
-                AndThen::Next() => continue,
-                AndThen::Exit() => return,
+                Err(msg) => println!("{}", msg),
+                Ok(_) => return,
             },
         }
     }
 }
 
-fn handle_input(utils: &Utilities, input: &String) -> AndThen {
+fn handle_input(utils: &Utilities, input: &String) -> Result<usize, String> {
     if "q\n" == input {
-        return AndThen::Exit()
+        return Ok(0)
     }
     let mut nori = input.trim();
     if let Ok(i) = nori.parse::<usize>() {
@@ -41,14 +42,8 @@ fn handle_input(utils: &Utilities, input: &String) -> AndThen {
     }
     if let Some(f) = utils.by_name(&nori) {
         f();
-        AndThen::Exit()
+        Ok(0)
     } else {
-        println!("No '{}' utility is known", nori);
-        AndThen::Next()
+        Err(format!("No '{}' utility is known", nori))
     }
-}
-
-enum AndThen {
-    Next(),
-    Exit(),
 }
