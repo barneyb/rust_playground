@@ -1,3 +1,5 @@
+use std::ops::{Add, Mul};
+
 pub fn run(program: &mut Vec<i32>) {
     let mut ex = Execution::new(program);
     while !ex.halted() {
@@ -24,25 +26,21 @@ impl<'a> Execution<'a> {
             panic!("Can't step when already halted");
         }
         match self.program.get(self.ip).unwrap() {
-            1 => {
-                let a = self.program[self.ip + 1] as usize;
-                let b = self.program[self.ip + 2] as usize;
-                let c = self.program[self.ip + 3] as usize;
-                self.program[c] = self.program[a] + self.program[b];
-                self.ip += 4;
-            },
-            2 => {
-                let a = self.program[self.ip + 1] as usize;
-                let b = self.program[self.ip + 2] as usize;
-                let c = self.program[self.ip + 3] as usize;
-                self.program[c] = self.program[a] * self.program[b];
-                self.ip += 4;
-            },
-            99 => {
-                self.ip = usize::max_value();
-            }
-            opcode => panic!("Unknown opcode {} (at {} of {:?})", opcode, self.ip, self.program),
+            1 => self.binary_op(i32::add),
+            2 => self.binary_op(i32::mul),
+            99 => self.ip = usize::max_value(),
+            opcode => panic!("Unknown opcode {} (at position {})", opcode, self.ip),
         };
+    }
+
+    fn binary_op<F>(&mut self, mut f: F)
+        where F: FnMut(i32, i32) -> i32
+    {
+        let a = self.program[self.ip + 1] as usize;
+        let b = self.program[self.ip + 2] as usize;
+        let c = self.program[self.ip + 3] as usize;
+        self.program[c] = f(self.program[a], self.program[b]);
+        self.ip += 4;
     }
 
     fn halted(&self) -> bool {
