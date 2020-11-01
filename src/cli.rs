@@ -11,3 +11,11 @@ pub fn util_args() -> env::Args {
     args.next(); // kill utility name
     args
 }
+
+pub fn aoc_filename(fallback: &str) -> String {
+    if let Some(n) = util_args().next() {
+        n
+    } else {
+        String::from(fallback)
+    }
+}

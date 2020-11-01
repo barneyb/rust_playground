@@ -5,6 +5,7 @@ pub mod fs;
 mod guess_number;
 mod temp_convert;
 mod aoc_2019_01;
+mod aoc_2019_02;
 
 pub struct Utilities<'a> {
     utilities: HashMap<&'a str, fn()>,
@@ -23,6 +24,7 @@ impl<'a> Utilities<'a> {
         utilities.insert("temp", temp_convert::run);
         utilities.insert("guess", guess_number::run);
         utilities.insert("AoC 2019-01", aoc_2019_01::run);
+        utilities.insert("AoC 2019-02", aoc_2019_02::run);
         let mut names: Vec<&str> = utilities.iter()
             .map(|(k, _)| *k)
             .collect();

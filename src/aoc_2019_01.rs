@@ -1,11 +1,9 @@
 use crate::fs;
 use crate::cli;
 
-const DEFAULT_FILENAME: &'static str = "aoc_2019_01.txt";
-
 pub fn run() {
     let masses: Vec<usize> = fs::read_lines(
-        get_filename(),
+        cli::aoc_filename("aoc_2019_01.txt"),
         |l| l.parse::<usize>().unwrap()
     ).unwrap();
 
@@ -22,14 +20,6 @@ pub fn run() {
         .sum();
 
     println!("Fuel ACTUALLY needed: {}", fuel);
-}
-
-fn get_filename() -> String {
-    if let Some(n) = cli::util_args().next() {
-        n
-    } else {
-        String::from(DEFAULT_FILENAME)
-    }
 }
 
 fn needed_fuel(mass: &usize) -> usize {
