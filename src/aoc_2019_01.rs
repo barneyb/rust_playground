@@ -1,9 +1,10 @@
-use crate::{util_args, read_lines};
+use crate::fs;
+use crate::cli;
 
 const DEFAULT_FILENAME: &'static str = "aoc_2019_01.txt";
 
 pub fn run() {
-    let masses: Vec<usize> = read_lines(
+    let masses: Vec<usize> = fs::read_lines(
         get_filename(),
         |l| l.parse::<usize>().unwrap()
     ).unwrap();
@@ -17,7 +18,7 @@ pub fn run() {
 }
 
 fn get_filename() -> String {
-    if let Some(n) = util_args().next() {
+    if let Some(n) = cli::util_args().next() {
         n
     } else {
         String::from(DEFAULT_FILENAME)

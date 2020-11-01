@@ -1,10 +1,11 @@
-use rust_playground::{Utilities, cmd_args};
+use rust_playground::Utilities;
+use rust_playground::cli;
 use std::io;
 
 fn main() {
     let utils = Utilities::new();
 
-    if let Some(n) = cmd_args().next() {
+    if let Some(n) = cli::cmd_args().next() {
         match handle_input(&utils, &n) {
             Err(msg) => println!("{}", msg),
             Ok(_) => return,
