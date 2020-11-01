@@ -8,19 +8,16 @@ pub fn run() {
         cli::aoc_filename("aoc_2019_03.txt"),
         parse_line
     ).unwrap();
+
     let mut points = HashSet::new();
     walk_wire(&wires[0], |p| {
         points.insert(p);
     });
-    println!("points size {}", points.len());
+
     let mut best = i32::max_value();
     walk_wire(&wires[1], |p| {
         if points.contains(&p) {
-            let d = p.manhattan_distance();
-            if d < best {
-                println!("Cross at {} is {} away", p, d);
-                best = d
-            }
+            best = best.min(p.manhattan_distance())
         }
     });
     println!("closest intersection: {}", best);
