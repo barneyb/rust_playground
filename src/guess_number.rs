@@ -3,8 +3,6 @@ pub fn run() {
     use std::cmp::Ordering;
     use rand::Rng;
 
-    println!("Guess the number!");
-
     let secret_number = rand::thread_rng().gen_range(0, 100) + 1;
 
     loop {
@@ -26,8 +24,6 @@ pub fn run() {
             println!("Try an integer?");
             continue
         };
-
-        println!("You guessed: {}", guess);
 
         match guess.cmp(&secret_number) {
             Ordering::Less => println!("Too small!"),

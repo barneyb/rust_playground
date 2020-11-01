@@ -41,6 +41,9 @@ fn handle_input(utils: &Utilities, input: &String) -> Result<usize, String> {
         }
     }
     if let Some(f) = utils.by_name(&nori) {
+        println!("######################################################################");
+        println!("# Running '{}'", &nori);
+        println!("######################################################################");
         f();
         Ok(0)
     } else {

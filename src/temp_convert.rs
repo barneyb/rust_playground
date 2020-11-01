@@ -1,8 +1,6 @@
 pub fn run() {
     use std::io;
 
-    println!("Temperature converter!");
-
     loop {
         println!("Enter temp in F or C (or 'q' to quit)");
         let mut input = String::new();
