@@ -17,7 +17,6 @@ impl Display for Point {
     }
 }
 
-#[allow(dead_code)]
 impl Point {
 
     pub fn origin() -> Point {
@@ -55,10 +54,6 @@ impl Point {
 
     pub fn manhattan_distance(&self) -> i32 {
         self.x.abs() + self.y.abs()
-    }
-
-    pub fn manhattan_distance_from(&self, other: Point) -> i32 {
-        (self.x - other.x).abs() + (self.y - other.y).abs()
     }
 
 }
