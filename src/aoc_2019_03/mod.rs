@@ -2,6 +2,7 @@ use crate::fs;
 use crate::cli;
 use crate::point2d::{Dir, Point};
 use std::collections::HashMap;
+use std::collections::hash_map::RandomState;
 
 pub fn run() {
     let wires: Vec<Vec<Step>> = fs::read_lines(
@@ -9,36 +10,72 @@ pub fn run() {
         parse_line
     ).unwrap();
 
-    let mut points = HashMap::new();
-    let mut count = 0;
-    walk_wire(&wires[0], |p| {
-        count += 1;
-        points.insert(p, count);
-    });
+    let points = points_on_wire(&wires[0]);
 
-    let mut closest = i32::max_value();
-    let mut fastest = i32::max_value();
-    count = 0;
-    walk_wire(&wires[1], |p| {
-        count += 1;
-        if let Some(first_count) = points.get(&p) {
-            closest = closest.min(p.manhattan_distance());
-            fastest = fastest.min(first_count + count);
-        }
-    });
-    println!("closest intersection: {} steps", closest);
-    println!("fastest intersection: {} steps", fastest);
+    let stats = cross_stats(&points, &wires[1]);
+
+    println!("closest intersection: {} steps", stats.closest);
+    println!("fastest intersection: {} steps", stats.fastest);
 }
 
-fn walk_wire<F>(wire: &Vec<Step>, mut f: F)
+struct CrossStats {
+    closest: i32,
+    fastest: i32,
+}
+
+fn cross_stats(points: &HashMap<Point, i32, RandomState>, wire: &Vec<Step>) -> CrossStats {
+    let mut closest = i32::max_value();
+    let mut fastest = i32::max_value();
+    let mut point_count = 0;
+    walk_wire_by_point(&wire, |p| {
+        point_count += 1;
+        if let Some(first_count) = points.get(&p) {
+            closest = closest.min(p.manhattan_distance());
+            fastest = fastest.min(first_count + point_count);
+        }
+    });
+    CrossStats {
+        closest,
+        fastest,
+    }
+}
+
+fn points_on_wire(wire: &Vec<Step>) -> HashMap<Point, i32, RandomState> {
+    let mut points = HashMap::with_capacity(
+        wire_length(wire));
+
+    let mut point_count = 0;
+    walk_wire_by_point(wire, |p| {
+        point_count += 1;
+        points.entry(p).or_insert(point_count);
+    });
+
+    points
+}
+
+fn wire_length(wire: &Vec<Step>) -> usize {
+    let mut count = 1;
+    walk_wire_by_step(wire, |s| count += s.count);
+    count
+}
+
+fn walk_wire_by_point<F>(wire: &Vec<Step>, mut f: F)
     where F: FnMut(Point)
 {
     let mut curr = Point::origin();
-    for s in wire.iter() {
+    walk_wire_by_step(wire, |s| {
         for _ in 0..s.count {
             curr = curr.step(&s.dir);
-            &f(curr);
+            f(curr);
         }
+    });
+}
+
+fn walk_wire_by_step<F>(wire: &Vec<Step>, mut f: F)
+    where F: FnMut(&Step)
+{
+    for s in wire.iter() {
+        f(s);
     }
 }
 
