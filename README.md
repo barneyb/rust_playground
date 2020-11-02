@@ -2,6 +2,12 @@
 
 This project is... a playground... for Rust... for Barney. Shocking, I know.
 
+In case it doesn't go without saying: please don't assume anything you find in
+here is good. Even _I_ don't think it's good, and I wrote it to the best of my
+ability (at the time). There are a lot of inconsistencies, stylistic and
+otherwise. There's also stuff that is non-idiomatic, and even flat-out wrong.
+The goal is for me to play and learn, not to build a good software package.
+
 ## Running
 
 Do the `rustup` dance, then `cargo run`. You know the drill. You'll get a nice
@@ -15,9 +21,9 @@ command line:
 
 ## The Advent of Code Utilities
 
-I like [Advent of Code](https://adventofcode.com). You should give it a trye if
+I like [Advent of Code](https://adventofcode.com). You should give it a try if
 you haven't before. As well as entertaining me all December, the problems also
-provide nice ready-made sample apps of low but non-trivial complexity for
+provide nice ready-made sample apps of low - but non-trivial - complexity for
 playing with stuff. Like Rust!
 
 The `aoc_*` utilities require an input file to read from, by default the same as
