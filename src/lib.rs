@@ -7,6 +7,7 @@ mod temp_convert;
 mod aoc_2019_01;
 mod aoc_2019_02;
 mod aoc_2019_03;
+mod aoc_2019_04;
 mod point2d;
 
 pub struct Utilities<'a> {
@@ -28,6 +29,7 @@ impl<'a> Utilities<'a> {
         utilities.insert("aoc_2019_01", aoc_2019_01::run);
         utilities.insert("aoc_2019_02", aoc_2019_02::run);
         utilities.insert("aoc_2019_03", aoc_2019_03::run);
+        utilities.insert("aoc_2019_04", aoc_2019_04::run);
         let mut names: Vec<&str> = utilities.iter()
             .map(|(k, _)| *k)
             .collect();
