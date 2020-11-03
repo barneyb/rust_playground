@@ -2,27 +2,34 @@ use std::fs;
 use crate::cli;
 
 pub fn run() {
-    let (start, end) = parse();
-    println!(" from {}", start);
+    let (mut curr, end) = parse();
+    println!(" from {}", curr);
     println!("   to {}", end);
-    let n = (start..=end)
-        .filter(|n| {
-            let mut last = n % 10;
-            let mut rest = n / 10;
-            let mut double = false;
-            while rest > 0 {
-                let next = rest % 10;
-                if next > last {
-                    return false
-                }
-                double = double || next == last;
-                last = next;
-                rest = rest / 10;
+    let mut count = 0;
+    let mut iterations = 0;
+    'outer: while curr <= end {
+        iterations += 1;
+        let mut last = curr % 10;
+        let mut rest = curr / 10;
+        let mut mult = 1;
+        let mut double = false;
+        while rest > 0 {
+            let next = rest % 10;
+            if next > last {
+                curr += (next - last) * mult;
+                continue 'outer
             }
-            double
-        })
-        .count();
-    println!("count {}", n);
+            rest /= 10;
+            mult *= 10;
+            double = double || next == last;
+            last = next;
+        }
+        if double {
+            count += 1;
+        }
+        curr += 1;
+    }
+    println!("count {} in {} iterations", count, iterations);
 }
 
 fn parse() -> (i32, i32) {
