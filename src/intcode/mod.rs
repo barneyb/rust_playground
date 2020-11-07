@@ -1,26 +1,29 @@
 use std::ops::{Add, Mul};
+use self::io::{InStream, OutStream};
+
+mod io;
 
 struct Input<'a> {
-    buffer: Option<&'a mut Vec<i32>>,
+    buffer: Option<&'a mut dyn io::InStream<i32>>,
 }
 
 impl<'a> Input<'a> {
     fn read(&mut self) -> i32 {
         match &mut self.buffer {
-            Some(b) => b.remove(0),
+            Some(b) => b.read(),
             None => panic!("No input is available!")
         }
     }
 }
 
 struct Output<'a> {
-    buffer: Option<&'a mut Vec<i32>>,
+    buffer: Option<&'a mut dyn io::OutStream<i32>>,
 }
 
 impl<'a> Output<'a> {
     fn write(&mut self, n: i32) {
         if let Some(b) = &mut self.buffer {
-            b.push(n)
+            b.write(n)
         }
     }
 }
@@ -43,11 +46,11 @@ impl<'a> Machine<'a> {
         }
     }
 
-    pub fn stdin(&mut self, buffer: &'a mut Vec<i32>) {
+    pub fn stdin(&mut self, buffer: &'a mut dyn InStream<i32>) {
         self.stdin = Input { buffer: Some(buffer) }
     }
 
-    pub fn stdout(&mut self, buffer: &'a mut Vec<i32>) {
+    pub fn stdout(&mut self, buffer: &'a mut dyn OutStream<i32>) {
         self.stdout = Output { buffer: Some(buffer) }
     }
 
