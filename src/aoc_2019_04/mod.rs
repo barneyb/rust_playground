@@ -28,7 +28,9 @@ fn test(n: i32) -> Result {
     let mut last = n % 10;
     let mut rest = n / 10;
     let mut place = 1;
-    let mut accept = false;
+    let mut run_digit = -1;
+    let mut run_size = 0;
+    let mut doubled_digit = -1;
     while rest > 0 {
         let curr = rest % 10;
         // if we're ascending, skip to the next possibility
@@ -42,12 +44,23 @@ fn test(n: i32) -> Result {
         place *= 10;
         // check for a run
         if curr == last {
-            accept = true;
+            if curr == run_digit {
+                run_size += 1;
+            } else {
+                run_digit = curr;
+                run_size = 2;
+            }
+            if run_size == 2 && doubled_digit < 0 {
+                doubled_digit = curr;
+            }
+            if run_size > 2 && run_digit == doubled_digit {
+                doubled_digit = -1;
+            }
         }
         last = curr;
     }
     return Result {
-        accept,
+        accept: doubled_digit >= 0,
         skip: 1,
     }
 }
@@ -62,4 +75,17 @@ fn parse() -> (i32, i32) {
         .map(|s| s.parse::<i32>().unwrap())
         .collect::<Vec<_>>();
     (parts[0], parts[1])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn triples() {
+        assert!(test(677788).accept);
+        assert!(!test(677789).accept);
+        assert!(test(677889).accept);
+    }
+
 }
