@@ -30,6 +30,7 @@ impl<'a> Output<'a> {
 
 pub struct Machine<'a> {
     ip: usize,
+    modes: i32,
     program: &'a mut Vec<i32>,
     stdin: Input<'a>,
     stdout: Output<'a>,
@@ -40,6 +41,7 @@ impl<'a> Machine<'a> {
     pub fn new(program: &mut Vec<i32>) -> Machine {
         Machine {
             ip: 0,
+            modes: 0,
             program,
             stdin: Input { buffer: None },
             stdout: Output { buffer: None },
@@ -64,19 +66,19 @@ impl<'a> Machine<'a> {
         if self.halted() {
             panic!("Can't step when already halted");
         }
-        match self.next() {
+        match self.next_op() {
             1 => self.binary_op(i32::add),
             2 => self.binary_op(i32::mul),
             3 => {
-                let pos = self.next_pos();
+                let pos = self.next_position();
                 self.program[pos] = self.stdin.read()
             },
             4 => {
-                let pos = self.next_pos();
-                self.stdout.write(self.program[pos])
+                let value = self.next_param();
+                self.stdout.write(value)
             },
             99 => self.ip = usize::max_value(),
-            opcode => panic!("Unknown opcode {} (at position {})", opcode, self.ip),
+            opcode => panic!("Unknown opcode {} (at position {})", opcode, self.ip - 1),
         };
     }
 
@@ -86,17 +88,34 @@ impl<'a> Machine<'a> {
         v
     }
 
-    fn next_pos(&mut self) -> usize {
+    fn next_op(&mut self) -> i32 {
+        let i = self.next();
+        self.modes = i / 100;
+        i % 100
+    }
+
+    fn next_param(&mut self) -> i32 {
+        let mut v = self.next();
+        v = match self.modes % 10 {
+            0 => self.program[v as usize], // position
+            1 => v, // immediate
+            m => panic!("Unknown parameter mode {}", m),
+        };
+        self.modes /= 10;
+        v
+    }
+
+    fn next_position(&mut self) -> usize {
         self.next() as usize
     }
 
     fn binary_op<F>(&mut self, mut f: F)
         where F: FnMut(i32, i32) -> i32
     {
-        let a = self.next_pos();
-        let b = self.next_pos();
-        let c = self.next_pos();
-        self.program[c] = f(self.program[a], self.program[b]);
+        let a = self.next_param();
+        let b = self.next_param();
+        let c = self.next_position();
+        self.program[c] = f(a, b);
     }
 
     fn halted(&self) -> bool {
@@ -158,6 +177,13 @@ mod tests {
         assert_eq!(prog[0], 42); // the temp storage
         assert_eq!(input[0], 1); // read from the head
         assert_eq!(output[3], 42); // wrote to the tail
+    }
+
+    #[test]
+    fn parameter_modes() {
+        let mut prog = vec![1002,4,3,4,33];
+        Machine::new(&mut prog).run();
+        assert_eq!(prog[4], 99);
     }
 
 }
