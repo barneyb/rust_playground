@@ -9,6 +9,7 @@ mod aoc_2019_02;
 mod aoc_2019_03;
 mod aoc_2019_04;
 mod point2d;
+mod intcode;
 
 pub struct Utilities<'a> {
     utilities: HashMap<&'a str, fn()>,
