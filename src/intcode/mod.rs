@@ -1,7 +1,17 @@
+use std::fs;
 use std::ops::{Add, Mul};
 use self::io::{InStream, OutStream};
 
 mod io;
+
+pub fn read_from_file(filename: String) -> Vec<i32> {
+    fs::read_to_string(filename)
+        .unwrap()
+        .trim()
+        .split(',')
+        .map(|a| a.parse().expect(&format!("couldn't parse '{}'", a)))
+        .collect()
+}
 
 struct Input<'a> {
     buffer: Option<&'a mut dyn io::InStream<i32>>,
