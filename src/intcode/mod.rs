@@ -87,6 +87,12 @@ impl<'a> Machine<'a> {
                 let value = self.next_param();
                 self.stdout.write(value)
             },
+            8 => {
+                let a = self.next_param();
+                let b = self.next_param();
+                let c = self.next_position();
+                self.program[c] = if a == b { 1 } else { 0 };
+            },
             99 => self.ip = usize::max_value(),
             opcode => panic!("Unknown opcode {} (at position {})", opcode, self.ip - 1),
         };
@@ -194,6 +200,50 @@ mod tests {
         let mut prog = vec![1002,4,3,4,33];
         Machine::new(&mut prog).run();
         assert_eq!(prog[4], 99);
+    }
+
+    #[test]
+    fn equals_position() {
+        let mut prog = vec![3,9,8,9,10,9,4,9,99,-1,8];
+        let mut input = vec![4, 8, 12];
+        let mut output = vec![];
+        let mut m = Machine::new(&mut prog);
+        m.stdin(&mut input);
+        m.stdout(&mut output);
+        m.run();
+        assert_eq!(output.remove(0), 0); // less than is not equal
+        m = Machine::new(&mut prog);
+        m.stdin(&mut input);
+        m.stdout(&mut output);
+        m.run();
+        assert_eq!(output.remove(0), 1); // equal is equal
+        m = Machine::new(&mut prog);
+        m.stdin(&mut input);
+        m.stdout(&mut output);
+        m.run();
+        assert_eq!(output.remove(0), 0); // greater than is not equal
+    }
+
+    #[test]
+    fn equals_immediate() {
+        let mut prog = vec![3,3,1108,-1,8,3,4,3,99];
+        let mut input = vec![4, 8, 12];
+        let mut output = vec![];
+        let mut m = Machine::new(&mut prog);
+        m.stdin(&mut input);
+        m.stdout(&mut output);
+        m.run();
+        assert_eq!(output.remove(0), 0); // less than is not equal
+        m = Machine::new(&mut prog);
+        m.stdin(&mut input);
+        m.stdout(&mut output);
+        m.run();
+        assert_eq!(output.remove(0), 1); // equal is equal
+        m = Machine::new(&mut prog);
+        m.stdin(&mut input);
+        m.stdout(&mut output);
+        m.run();
+        assert_eq!(output.remove(0), 0); // greater than is not equal
     }
 
 }
