@@ -25,7 +25,7 @@ impl<'a> Execution<'a> {
         if self.halted() {
             panic!("Can't step when already halted");
         }
-        match self.program.get(self.ip).unwrap() {
+        match self.next() {
             1 => self.binary_op(i32::add),
             2 => self.binary_op(i32::mul),
             99 => self.ip = usize::max_value(),
@@ -33,14 +33,19 @@ impl<'a> Execution<'a> {
         };
     }
 
+    fn next(&mut self) -> i32 {
+        let v = self.program[self.ip];
+        self.ip += 1;
+        v
+    }
+
     fn binary_op<F>(&mut self, mut f: F)
         where F: FnMut(i32, i32) -> i32
     {
-        let a = self.program[self.ip + 1] as usize;
-        let b = self.program[self.ip + 2] as usize;
-        let c = self.program[self.ip + 3] as usize;
+        let a = self.next() as usize;
+        let b = self.next() as usize;
+        let c = self.next() as usize;
         self.program[c] = f(self.program[a], self.program[b]);
-        self.ip += 4;
     }
 
     fn halted(&self) -> bool {
