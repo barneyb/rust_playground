@@ -87,6 +87,26 @@ impl<'a> Machine<'a> {
                 let value = self.next_param();
                 self.stdout.write(value)
             },
+            5 => {
+                let a = self.next_param();
+                let b = self.next_param();
+                if a != 0 {
+                    self.ip = b as usize;
+                }
+            },
+            6 => {
+                let a = self.next_param();
+                let b = self.next_param();
+                if a == 0 {
+                    self.ip = b as usize;
+                }
+            },
+            7 => {
+                let a = self.next_param();
+                let b = self.next_param();
+                let c = self.next_position();
+                self.program[c] = if a < b { 1 } else { 0 };
+            },
             8 => {
                 let a = self.next_param();
                 let b = self.next_param();
