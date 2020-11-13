@@ -1,14 +1,25 @@
 use crate::fs;
 use crate::cli;
 
+#[cfg(test)]
+mod test;
+
 pub fn run() {
     let ops = parse();
     let it = slam_shuffle(&ops, 10007, 2019);
-    println!("{}", it)
+    println!("{}", it);
+    let it = unslam_shuffle(&ops, 10007, it);
+    println!("{}", it);
 }
 
 fn slam_shuffle(ops: &Vec<Op>, deck_size: i32, card: i32) -> i32 {
     ops.iter().fold(card, |idx, op| shuffle(op, deck_size, idx))
+}
+
+fn unslam_shuffle(ops: &Vec<Op>, deck_size: i32, card: i32) -> i32 {
+    let mut rev_ops = ops.to_vec();
+    rev_ops.reverse();
+    rev_ops.iter().fold(card, |idx, op| unshuffle(op, deck_size, idx))
 }
 
 fn shuffle(op: &Op, deck_size: i32, idx: i32) -> i32 {
@@ -19,7 +30,40 @@ fn shuffle(op: &Op, deck_size: i32, idx: i32) -> i32 {
     }
 }
 
-#[derive(Debug)]
+fn unshuffle(op: &Op, deck_size: i32, idx: i32) -> i32 {
+    match op {
+        Op::Reverse() => (deck_size - idx - 1) % deck_size,
+        Op::Cut(n) => (deck_size + idx + n) % deck_size,
+        Op::Deal(n) => idx * inverse(*n, deck_size) % deck_size,
+    }
+}
+
+fn inverse(a: i32, n: i32) -> i32 {
+    let mut t = 0;
+    let mut newt = 1;
+    let mut r = n;
+    let mut newr = a;
+
+    while newr != 0 {
+        let quotient = r / newr;
+        let pt = t;
+        t = newt;
+        newt = pt  - quotient * newt;
+        let pr = r;
+        r = newr;
+        newr = pr - quotient * newr;
+    }
+
+    if r > 1 {
+        panic!("a '{}' is not invertible mod {}", a, n);
+    }
+    if t < 0 {
+        t = t + n;
+    }
+    t
+}
+
+#[derive(Debug, Clone)]
 enum Op {
     Reverse(),
     Cut(i32),
@@ -41,60 +85,4 @@ fn parse() -> Vec<Op> {
             }
         }
     ).unwrap()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn reverse() {
-        assert_eq!(shuffle(&Op::Reverse(), 10, 9), 0);
-    }
-
-    #[test]
-    fn cut_positive() {
-        assert_eq!(shuffle(&Op::Cut(3), 10, 0), 7);
-        assert_eq!(shuffle(&Op::Cut(3), 10, 2), 9);
-        assert_eq!(shuffle(&Op::Cut(3), 10, 3), 0);
-        assert_eq!(shuffle(&Op::Cut(3), 10, 9), 6);
-    }
-
-    #[test]
-    fn cut_negative() {
-        assert_eq!(shuffle(&Op::Cut(-4), 10, 0), 4);
-        assert_eq!(shuffle(&Op::Cut(-4), 10, 5), 9);
-        assert_eq!(shuffle(&Op::Cut(-4), 10, 6), 0);
-        assert_eq!(shuffle(&Op::Cut(-4), 10, 9), 3);
-    }
-
-    #[test]
-    fn deal() {
-        assert_eq!(shuffle(&Op::Deal(3), 10, 0), 0);
-        assert_eq!(shuffle(&Op::Deal(3), 10, 1), 3);
-        assert_eq!(shuffle(&Op::Deal(3), 10, 2), 6);
-        assert_eq!(shuffle(&Op::Deal(3), 10, 3), 9);
-        assert_eq!(shuffle(&Op::Deal(3), 10, 4), 2);
-        assert_eq!(shuffle(&Op::Deal(3), 10, 9), 7);
-    }
-
-    #[test]
-    fn example_one() {
-        let ops = vec![
-            Op::Deal(7),
-            Op::Reverse(),
-            Op::Reverse(),
-        ];
-        assert_eq!(slam_shuffle(&ops, 10, 0), 0);
-        assert_eq!(slam_shuffle(&ops, 10, 3), 1);
-        assert_eq!(slam_shuffle(&ops, 10, 6), 2);
-        assert_eq!(slam_shuffle(&ops, 10, 9), 3);
-        assert_eq!(slam_shuffle(&ops, 10, 2), 4);
-        assert_eq!(slam_shuffle(&ops, 10, 5), 5);
-        assert_eq!(slam_shuffle(&ops, 10, 8), 6);
-        assert_eq!(slam_shuffle(&ops, 10, 1), 7);
-        assert_eq!(slam_shuffle(&ops, 10, 4), 8);
-        assert_eq!(slam_shuffle(&ops, 10, 7), 9);
-    }
-
 }
