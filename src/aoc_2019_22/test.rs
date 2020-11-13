@@ -52,7 +52,7 @@ fn deal() {
     assert_eq!(shuffle(&Op::Deal(3), 10, 9), 7);
 }
 
-fn deal_symmetry(ds: i32, n: i32) {
+fn deal_symmetry(ds: i64, n: i64) {
     let op = Op::Deal(n);
     for i in 0..ds {
         let si = shuffle(&op, ds, i);
@@ -84,16 +84,6 @@ fn example_one() {
     assert_eq!(slam_shuffle(&ops, 10, 1), 7);
     assert_eq!(slam_shuffle(&ops, 10, 4), 8);
     assert_eq!(slam_shuffle(&ops, 10, 7), 9);
-}
-
-#[test]
-fn test_gcd() {
-    assert_eq!(gcd(1, 2), 1);
-    assert_eq!(gcd(2, 1), 1);
-    assert_eq!(gcd(7, 5), 1);
-    assert_eq!(gcd(5, 7), 1);
-    assert_eq!(gcd(6, 35), 1);
-    assert_eq!(gcd(24, 42), 6);
 }
 
 #[test]
