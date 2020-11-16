@@ -2,63 +2,43 @@ use super::*;
 
 #[test]
 fn reverse() {
-    assert_eq!(shuffle(&Op::Reverse(), 10, 9), 0);
-}
-
-#[test]
-fn unreverse() {
-    assert_eq!(unshuffle(&Op::Reverse(), 10, 0), 9);
+    assert_eq!(Op::Reverse().perform(10, 9), 0);
 }
 
 #[test]
 fn cut_positive() {
-    assert_eq!(shuffle(&Op::Cut(3), 10, 0), 7);
-    assert_eq!(shuffle(&Op::Cut(3), 10, 2), 9);
-    assert_eq!(shuffle(&Op::Cut(3), 10, 3), 0);
-    assert_eq!(shuffle(&Op::Cut(3), 10, 9), 6);
-}
-
-#[test]
-fn uncut_positive() {
-    assert_eq!(unshuffle(&Op::Cut(3), 10, 7), 0);
-    assert_eq!(unshuffle(&Op::Cut(3), 10, 9), 2);
-    assert_eq!(unshuffle(&Op::Cut(3), 10, 0), 3);
-    assert_eq!(unshuffle(&Op::Cut(3), 10, 6), 9);
+    assert_eq!(Op::Cut(3).perform(10, 0), 7);
+    assert_eq!(Op::Cut(3).perform(10, 2), 9);
+    assert_eq!(Op::Cut(3).perform(10, 3), 0);
+    assert_eq!(Op::Cut(3).perform(10, 9), 6);
 }
 
 #[test]
 fn cut_negative() {
-    assert_eq!(shuffle(&Op::Cut(-4), 10, 0), 4);
-    assert_eq!(shuffle(&Op::Cut(-4), 10, 5), 9);
-    assert_eq!(shuffle(&Op::Cut(-4), 10, 6), 0);
-    assert_eq!(shuffle(&Op::Cut(-4), 10, 9), 3);
-}
-
-#[test]
-fn uncut_negative() {
-    assert_eq!(unshuffle(&Op::Cut(-4), 10, 4), 0);
-    assert_eq!(unshuffle(&Op::Cut(-4), 10, 9), 5);
-    assert_eq!(unshuffle(&Op::Cut(-4), 10, 0), 6);
-    assert_eq!(unshuffle(&Op::Cut(-4), 10, 3), 9);
+    assert_eq!(Op::Cut(-4).perform(10, 0), 4);
+    assert_eq!(Op::Cut(-4).perform(10, 5), 9);
+    assert_eq!(Op::Cut(-4).perform(10, 6), 0);
+    assert_eq!(Op::Cut(-4).perform(10, 9), 3);
 }
 
 #[test]
 fn deal() {
-    assert_eq!(shuffle(&Op::Deal(3), 10, 0), 0);
-    assert_eq!(shuffle(&Op::Deal(3), 10, 1), 3);
-    assert_eq!(shuffle(&Op::Deal(3), 10, 2), 6);
-    assert_eq!(shuffle(&Op::Deal(3), 10, 3), 9);
-    assert_eq!(shuffle(&Op::Deal(3), 10, 4), 2);
-    assert_eq!(shuffle(&Op::Deal(3), 10, 9), 7);
+    assert_eq!(Op::Deal(3).perform(10, 0), 0);
+    assert_eq!(Op::Deal(3).perform(10, 1), 3);
+    assert_eq!(Op::Deal(3).perform(10, 2), 6);
+    assert_eq!(Op::Deal(3).perform(10, 3), 9);
+    assert_eq!(Op::Deal(3).perform(10, 4), 2);
+    assert_eq!(Op::Deal(3).perform(10, 9), 7);
 }
 
 fn deal_symmetry(ds: i64, n: i64) {
     let op = Op::Deal(n);
+    let rev = op.invert(ds);
     for i in 0..ds {
-        let si = shuffle(&op, ds, i);
-        let usi = unshuffle(&op, ds, i);
-        assert_eq!(unshuffle(&op, ds, si), i);
-        assert_eq!(shuffle(&op, ds, usi), i);
+        let si = op.perform(ds, i);
+        let usi = rev.perform(ds, i);
+        assert_eq!(rev.perform(ds, si), i);
+        assert_eq!(op.perform(ds, usi), i);
     }
 }
 
