@@ -6,40 +6,31 @@ mod test;
 
 pub fn run() {
     let ops = parse();
+
+    let rev_ops = invert_ops(&ops, 10007);
     let it = slam_shuffle(&ops, 10007, 2019);
     println!("{}", it);
-    let it = unslam_shuffle(&ops, 10007, it);
+    let it = slam_shuffle(&rev_ops, 10007, it);
     println!("{}", it);
-    let it = unslam_shuffle(&ops, 119315717514047, 2020);
+
+    let rev_ops = invert_ops(&ops, 119315717514047);
+    let it = slam_shuffle(&rev_ops, 119315717514047, 2020);
     println!("{}", it);
     let it = slam_shuffle(&ops, 119315717514047, it);
     println!("{}", it);
 }
 
-fn slam_shuffle(ops: &Vec<Op>, deck_size: i64, card: i64) -> i64 {
-    ops.iter().fold(card, |idx, op| shuffle(op, deck_size, idx))
-}
-
-fn unslam_shuffle(ops: &Vec<Op>, deck_size: i64, card: i64) -> i64 {
+fn invert_ops(ops: &Vec<Op>, deck_size: i64) -> Vec<Op> {
     let mut rev_ops = ops.to_vec();
     rev_ops.reverse();
-    rev_ops.iter().fold(card, |idx, op| unshuffle(op, deck_size, idx))
+    for i in 0..(rev_ops.len()) {
+        rev_ops[i] = rev_ops[i].invert(deck_size);
+    }
+    rev_ops
 }
 
-fn shuffle(op: &Op, deck_size: i64, idx: i64) -> i64 {
-    match op {
-        Op::Reverse() => (deck_size - idx - 1) % deck_size,
-        Op::Cut(n) => (deck_size + idx - n) % deck_size,
-        Op::Deal(n) => (idx * n) % deck_size,
-    }
-}
-
-fn unshuffle(op: &Op, deck_size: i64, idx: i64) -> i64 {
-    match op {
-        Op::Reverse() => (deck_size - idx - 1) % deck_size,
-        Op::Cut(n) => (deck_size + idx + n) % deck_size,
-        Op::Deal(n) => multiply(idx, inverse(*n, deck_size), deck_size),
-    }
+fn slam_shuffle(ops: &Vec<Op>, deck_size: i64, card: i64) -> i64 {
+    ops.iter().fold(card, |idx, op| op.perform(deck_size, idx))
 }
 
 fn multiply(mut a: i64, mut b: i64, modulus: i64) -> i64 {
@@ -85,6 +76,24 @@ enum Op {
     Reverse(),
     Cut(i64),
     Deal(i64),
+}
+
+impl Op {
+    fn perform(&self, deck_size: i64, idx: i64) -> i64 {
+        match self {
+            Op::Reverse() => (deck_size - idx - 1) % deck_size,
+            Op::Cut(n) => (deck_size + idx - n) % deck_size,
+            Op::Deal(n) => multiply(idx, *n, deck_size),
+        }
+    }
+
+    fn invert(&self, deck_size: i64) -> Op {
+        match self {
+            Op::Reverse() => Op::Reverse(),
+            Op::Cut(n) => Op::Cut(-1 * n),
+            Op::Deal(n) => Op::Deal(inverse(*n, deck_size)),
+        }
+    }
 }
 
 fn parse() -> Vec<Op> {
