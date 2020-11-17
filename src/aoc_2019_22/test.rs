@@ -71,3 +71,47 @@ fn test_inverse() {
     assert_eq!(inverse(3, 7), 5);
     assert_eq!(inverse(4, 7), 2);
 }
+
+#[test]
+fn table() {
+    let ops = vec![
+        Op::Reverse(),
+        Op::Cut(-2),
+        Op::Deal(7),
+        Op::Cut(8),
+        Op::Cut(-4),
+        Op::Deal(7),
+        Op::Cut(3),
+        Op::Deal(9),
+        Op::Deal(3),
+        Op::Cut(-1),
+    ];
+
+    let deck_size = 19;
+    for op in ops.iter() {
+        match op {
+            Op::Reverse() => {}
+            Op::Cut(_) => {}
+            Op::Deal(n) => {
+                if gcd(*n, deck_size) != 1 {
+                    panic!("deck size {} is not compatible with Deal({})", deck_size, n)
+                }
+            }
+        }
+    }
+
+
+    let mut result = Vec::new();
+    for idx in 0..deck_size {
+        result.push(idx);
+    }
+    for itr in 0..=deck_size {
+        let mut next = Vec::new();
+        next.resize(deck_size as usize, 0);
+        for idx in 0..deck_size {
+            next[slam_shuffle(&ops, deck_size, idx) as usize] = result[idx as usize];
+        }
+        println!("{:2} {:?}", itr, result);
+        result = next;
+    }
+}

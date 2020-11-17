@@ -4,6 +4,10 @@ use crate::cli;
 #[cfg(test)]
 mod test;
 
+static DECK_SIZE: i64 = 119315717514047;
+#[allow(dead_code)]
+static ITR_COUNT: i64 = 101741582076661;
+
 pub fn run() {
     let ops = parse();
 
@@ -13,10 +17,10 @@ pub fn run() {
     let it = slam_shuffle(&rev_ops, 10007, it);
     println!("{}", it);
 
-    let rev_ops = invert_ops(&ops, 119315717514047);
-    let it = slam_shuffle(&rev_ops, 119315717514047, 2020);
+    let rev_ops = invert_ops(&ops, DECK_SIZE);
+    let it = slam_shuffle(&rev_ops, DECK_SIZE, 2020);
     println!("{}", it);
-    let it = slam_shuffle(&ops, 119315717514047, it);
+    let it = slam_shuffle(&ops, DECK_SIZE, it);
     println!("{}", it);
 }
 
@@ -46,6 +50,19 @@ fn multiply(mut a: i64, mut b: i64, modulus: i64) -> i64 {
     result
 }
 
+#[allow(dead_code)]
+fn gcd(mut a: i64, mut b: i64) -> i64 {
+    if a < b {
+        return gcd(b, a);
+    }
+    while b > 0 {
+        let temp = a;
+        a = b;
+        b = temp % b;
+    }
+    a
+}
+
 fn inverse(a: i64, n: i64) -> i64 {
     let mut t = 0;
     let mut newt = 1;
@@ -63,7 +80,7 @@ fn inverse(a: i64, n: i64) -> i64 {
     }
 
     if r > 1 {
-        panic!("a '{}' is not invertible mod {}", a, n);
+        panic!("{} is not invertible mod {}", a, n);
     }
     if t < 0 {
         t = t + n;
