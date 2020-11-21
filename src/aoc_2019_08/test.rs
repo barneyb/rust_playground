@@ -89,3 +89,17 @@ fn layers_nth_out_of_bounds() {
     }
 }
 
+#[test]
+fn example_two() {
+    let img = parse(2, 2, "0222112222120000");
+    println!("{}", render_layer(&img.get_layer(0)));
+    println!("{}", render_layer(&img.get_layer(1)));
+    println!("{}", render_layer(&img.get_layer(2)));
+    println!("{}", render_layer(&img.get_layer(3)));
+    let flat = img.flatten();
+    println!("{}", render_layer(&flat.get_layer(0)));
+    assert_eq!("+----+\n\
+                |  # |\n\
+                | #  |\n\
+                +----+\n", part_two(&img))
+}
