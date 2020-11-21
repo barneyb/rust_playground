@@ -12,8 +12,7 @@ pub fn run() {
 }
 
 fn part_one(img: &Image) -> usize {
-    let zeroy_layer = (0..img.layer_count())
-        .map(|i| img.get_layer(i))
+    let zeroy_layer = img.layers()
         .fold((usize::max_value(), None), |(min, prev), l| {
             let n = l.count_of(0);
             if n < min {
@@ -47,9 +46,44 @@ impl Image {
         }
     }
 
+    pub fn layers(&self) -> Layers {
+        Layers {
+            image: self,
+            curr: 0,
+        }
+    }
+
     #[inline]
     fn layer_size(&self) -> usize {
         (self.width * self.height) as usize
+    }
+}
+
+struct Layers<'a> {
+    image: &'a Image,
+    curr: usize,
+}
+
+impl<'a> Iterator for Layers<'a> {
+    type Item = Layer<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.curr >= self.image.layer_count() {
+            return None
+        }
+        let i = self.curr;
+        self.curr += 1;
+        Some(self.image.get_layer(i))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let r = self.image.layer_count() - self.curr;
+        (r, Some(r))
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.curr += n;
+        self.next()
     }
 }
 
