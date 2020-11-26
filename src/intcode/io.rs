@@ -6,13 +6,19 @@ pub trait InStream<T> {
 
 impl<T> InStream<T> for Vec<T> {
     fn read(&mut self) -> T {
+        if self.len() == 0 {
+            panic!("No input is available")
+        }
         self.remove(0)
     }
 }
 
 impl<T> InStream<T> for LinkedList<T> {
     fn read(&mut self) -> T {
-        self.pop_front().unwrap()
+        match self.pop_front() {
+            Some(v) => v,
+            None => panic!("No input is available"),
+        }
     }
 }
 
