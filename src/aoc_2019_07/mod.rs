@@ -1,5 +1,6 @@
 use crate::cli;
 use crate::intcode;
+use std::collections::LinkedList;
 
 #[cfg(test)]
 mod test;
@@ -55,17 +56,17 @@ fn find_optimial_phase_settings(prog: &Vec<i32>) -> OptimalPhases {
 
 fn thruster_signal(orig_prog: &Vec<i32>, phase_settings: [i32; 5]) -> i32 {
     let mut signal = 0;
-    let mut input = Vec::new();
-    let mut output = Vec::new();
+    let mut input = LinkedList::new();
+    let mut output = LinkedList::new();
     for phase in phase_settings.iter() {
-        input.push(*phase);
-        input.push(signal);
+        input.push_back(*phase);
+        input.push_back(signal);
         let mut prog = orig_prog.clone();
         let mut m = intcode::Machine::new(&mut prog);
         m.stdin(&mut input);
         m.stdout(&mut output);
         m.run();
-        signal = output.remove(0);
+        signal = output.pop_front().unwrap();
     }
     signal
 }
