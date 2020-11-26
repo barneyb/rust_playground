@@ -1,4 +1,5 @@
 use std::collections::LinkedList;
+use std::sync::mpsc::{Receiver, Sender, SyncSender};
 
 pub trait InStream<T> {
     fn read(&mut self) -> T;
@@ -22,6 +23,12 @@ impl<T> InStream<T> for LinkedList<T> {
     }
 }
 
+impl<T> InStream<T> for Receiver<T> {
+    fn read(&mut self) -> T {
+        self.recv().unwrap()
+    }
+}
+
 pub trait OutStream<T> {
     fn write(&mut self, n: T);
 }
@@ -31,8 +38,21 @@ impl<T> OutStream<T> for Vec<T> {
         self.push(n)
     }
 }
+
 impl<T> OutStream<T> for LinkedList<T> {
     fn write(&mut self, n: T) {
         self.push_back(n)
+    }
+}
+
+impl<T> OutStream<T> for Sender<T> {
+    fn write(&mut self, n: T) {
+        self.send(n).expect("Failed to send")
+    }
+}
+
+impl<T> OutStream<T> for SyncSender<T> {
+    fn write(&mut self, n: T) {
+        self.send(n).expect("Failed to send")
     }
 }

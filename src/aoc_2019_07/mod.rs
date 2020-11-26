@@ -1,6 +1,8 @@
 use crate::cli;
 use crate::intcode;
 use std::collections::LinkedList;
+use std::sync::mpsc;
+use std::thread;
 
 #[cfg(test)]
 mod test;
@@ -9,7 +11,8 @@ pub fn run() {
     let filename = cli::aoc_filename("aoc_2019_07.txt");
     let orig_prog = intcode::read_from_file(filename);
 
-    println!("{:?}", find_optimial_phase_settings(&orig_prog));
+    println!("{:?}", find_optimal_phase_settings(&orig_prog, [0, 1, 2, 3, 4], thruster_signal));
+    println!("{:?}", find_optimal_phase_settings(&orig_prog, [5, 6, 7, 8, 9], thruster_signal_with_feedback));
 }
 
 type PhaseSettings = [i32; 5];
@@ -20,13 +23,15 @@ struct OptimalPhaseSettings {
     signal: i32,
 }
 
-fn find_optimial_phase_settings(prog: &Vec<i32>) -> OptimalPhaseSettings {
+fn find_optimal_phase_settings<F>(prog: &Vec<i32>, settings: PhaseSettings, generator: F) -> OptimalPhaseSettings
+where F: Fn(&Vec<i32>, &PhaseSettings) -> i32
+{
     let mut best = OptimalPhaseSettings {
         settings: [0, 0, 0, 0, 0],
         signal: -1,
     };
-    for settings in AllPhaseSettings::new() {
-        let signal = thruster_signal(&prog, &settings);
+    for settings in AllPhaseSettings::from(settings) {
+        let signal = generator(&prog, &settings);
         if signal > best.signal {
             best = OptimalPhaseSettings {
                 settings, // i32 is copy, thus is [i32;n] also, so the clone is free
@@ -47,8 +52,12 @@ struct AllPhaseSettings {
 
 impl AllPhaseSettings {
     fn new() -> AllPhaseSettings {
+        AllPhaseSettings::from([0, 1, 2, 3, 4])
+    }
+
+    fn from(settings: PhaseSettings) -> AllPhaseSettings {
         AllPhaseSettings {
-            setting: [0, 1, 2, 3, 4],
+            setting: settings,
             stack: [0, 0, 0, 0, 0],
             ptr: 0,
             started: false,
@@ -108,4 +117,85 @@ fn thruster_signal(orig_prog: &Vec<i32>, phase_settings: &PhaseSettings) -> i32 
         signal = output.pop_front().unwrap();
     }
     signal
+}
+
+fn thruster_signal_with_feedback(orig_prog: &Vec<i32>, phase_settings: &PhaseSettings) -> i32 {
+
+    // all this mutability means I have the wrong stuff on IntCode's IO types
+    let (mut aout, mut bin) = mpsc::channel();
+    let (mut bout, mut cin) = mpsc::channel();
+    let (mut cout, mut din) = mpsc::channel();
+    let (mut dout, mut ein) = mpsc::channel();
+    let (mut eout, mut ain) = mpsc::channel();
+
+        let mut aprog = orig_prog.clone();
+        let mut bprog = orig_prog.clone();
+        let mut cprog = orig_prog.clone();
+        let mut dprog = orig_prog.clone();
+        let mut eprog = orig_prog.clone();
+
+    let toa = eout.clone();
+    let tob = aout.clone();
+    let toc = bout.clone();
+    let tod = cout.clone();
+    let toe = dout.clone();
+
+    toa.send(phase_settings[0]);
+    tob.send(phase_settings[1]);
+    toc.send(phase_settings[2]);
+    tod.send(phase_settings[3]);
+    toe.send(phase_settings[4]);
+
+    toa.send(0);
+
+    let mut threads = Vec::new();
+    threads.push(thread::spawn(move || {
+        let mut a = intcode::Machine::new(&mut aprog);
+
+        a.stdin(&mut ain);
+        a.stdout(&mut aout);
+        a.run();
+        ain.recv().unwrap() // the final signal
+    }));
+    threads.push(thread::spawn(move || {
+        let mut b = intcode::Machine::new(&mut bprog);
+
+        b.stdin(&mut bin);
+        b.stdout(&mut bout);
+        b.run();
+        0
+    }));
+    threads.push(thread::spawn(move || {
+        let mut c = intcode::Machine::new(&mut cprog);
+
+        c.stdin(&mut cin);
+        c.stdout(&mut cout);
+        c.run();
+        0
+    }));
+    threads.push(thread::spawn(move || {
+        let mut d = intcode::Machine::new(&mut dprog);
+
+        d.stdin(&mut din);
+        d.stdout(&mut dout);
+        d.run();
+        0
+    }));
+    threads.push(thread::spawn(move || {
+        let mut e = intcode::Machine::new(&mut eprog);
+        e.stdin(&mut ein);
+        e.stdout(&mut eout);
+        e.run();
+        0
+    }));
+
+    let mut sig = -1;
+    for t in threads {
+        let s = t.join();
+        if sig < 0 {
+            sig = s.unwrap()
+        }
+    }
+
+    sig // the final signal
 }
