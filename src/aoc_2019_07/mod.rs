@@ -12,37 +12,44 @@ pub fn run() {
     println!("{:?}", find_optimial_phase_settings(&orig_prog));
 }
 
+type Phases = [i32; 5];
+
 #[derive(Debug)]
 struct OptimalPhases {
-    phase_settings: [i32; 5],
+    settings: Phases,
     signal: i32,
 }
 
 fn find_optimial_phase_settings(prog: &Vec<i32>) -> OptimalPhases {
+    let mut settings = [0, 0, 0, 0, 0];
     let mut best = OptimalPhases {
-        phase_settings: [0, 0, 0, 0, 0],
-        signal: 0,
+        settings,
+        signal: -1,
     };
     for a in 0..5 {
+        settings[0] = a;
         for b in 0..5 {
             if b == a { continue }
+            settings[1] = b;
             for c in 0..5 {
                 if c == a { continue }
                 if c == b { continue }
+                settings[2] = c;
                 for d in 0..5 {
                     if d == a { continue }
                     if d == b { continue }
                     if d == c { continue }
+                    settings[3] = d;
                     for e in 0..5 {
                         if e == a { continue }
                         if e == b { continue }
                         if e == c { continue }
                         if e == d { continue }
-                        let phase_settings = [a, b, c, d, e];
-                        let signal = thruster_signal(&prog, phase_settings);
+                        settings[4] = e;
+                        let signal = thruster_signal(&prog, &settings);
                         if signal > best.signal {
                             best = OptimalPhases {
-                                phase_settings,
+                                settings, // since i32 is copy, so is [i32;n], so the dupe is free
                                 signal,
                             }
                         }
@@ -54,7 +61,7 @@ fn find_optimial_phase_settings(prog: &Vec<i32>) -> OptimalPhases {
     best
 }
 
-fn thruster_signal(orig_prog: &Vec<i32>, phase_settings: [i32; 5]) -> i32 {
+fn thruster_signal(orig_prog: &Vec<i32>, phase_settings: &Phases) -> i32 {
     let mut signal = 0;
     let mut input = LinkedList::new();
     let mut output = LinkedList::new();
