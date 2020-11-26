@@ -9,6 +9,7 @@ mod aoc_2019_02;
 mod aoc_2019_03;
 mod aoc_2019_04;
 mod aoc_2019_05;
+mod aoc_2019_07;
 mod aoc_2019_08;
 mod aoc_2019_22;
 mod point2d;
@@ -35,6 +36,7 @@ impl<'a> Utilities<'a> {
         utilities.insert("aoc_2019_03", aoc_2019_03::run);
         utilities.insert("aoc_2019_04", aoc_2019_04::run);
         utilities.insert("aoc_2019_05", aoc_2019_05::run);
+        utilities.insert("aoc_2019_07", aoc_2019_07::run);
         utilities.insert("aoc_2019_08", aoc_2019_08::run);
         utilities.insert("aoc_2019_22", aoc_2019_22::run);
         let mut names: Vec<&str> = utilities.iter()
