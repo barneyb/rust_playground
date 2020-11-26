@@ -12,56 +12,88 @@ pub fn run() {
     println!("{:?}", find_optimial_phase_settings(&orig_prog));
 }
 
-type Phases = [i32; 5];
+type PhaseSettings = [i32; 5];
 
 #[derive(Debug)]
-struct OptimalPhases {
-    settings: Phases,
+struct OptimalPhaseSettings {
+    settings: PhaseSettings,
     signal: i32,
 }
 
-fn find_optimial_phase_settings(prog: &Vec<i32>) -> OptimalPhases {
-    let mut settings = [0, 0, 0, 0, 0];
-    let mut best = OptimalPhases {
-        settings,
+fn find_optimial_phase_settings(prog: &Vec<i32>) -> OptimalPhaseSettings {
+    let mut best = OptimalPhaseSettings {
+        settings: [0, 0, 0, 0, 0],
         signal: -1,
     };
-    for a in 0..5 {
-        settings[0] = a;
-        for b in 0..5 {
-            if b == a { continue }
-            settings[1] = b;
-            for c in 0..5 {
-                if c == a { continue }
-                if c == b { continue }
-                settings[2] = c;
-                for d in 0..5 {
-                    if d == a { continue }
-                    if d == b { continue }
-                    if d == c { continue }
-                    settings[3] = d;
-                    for e in 0..5 {
-                        if e == a { continue }
-                        if e == b { continue }
-                        if e == c { continue }
-                        if e == d { continue }
-                        settings[4] = e;
-                        let signal = thruster_signal(&prog, &settings);
-                        if signal > best.signal {
-                            best = OptimalPhases {
-                                settings, // since i32 is copy, so is [i32;n], so the dupe is free
-                                signal,
-                            }
-                        }
-                    }
-                }
+    for settings in AllPhaseSettings::new() {
+        let signal = thruster_signal(&prog, &settings);
+        if signal > best.signal {
+            best = OptimalPhaseSettings {
+                settings, // i32 is copy, thus is [i32;n] also, so the clone is free
+                signal,
             }
         }
     }
     best
 }
 
-fn thruster_signal(orig_prog: &Vec<i32>, phase_settings: &Phases) -> i32 {
+#[derive(Debug)]
+struct AllPhaseSettings {
+    setting: PhaseSettings,
+    stack: [usize; 5],
+    ptr: usize,
+    started: bool,
+}
+
+impl AllPhaseSettings {
+    fn new() -> AllPhaseSettings {
+        AllPhaseSettings {
+            setting: [0, 1, 2, 3, 4],
+            stack: [0, 0, 0, 0, 0],
+            ptr: 0,
+            started: false,
+        }
+    }
+
+    fn swap(&mut self, i: usize, j: usize) {
+        let t = self.setting[i];
+        self.setting[i] = self.setting[j];
+        self.setting[j] = t;
+    }
+}
+
+impl Iterator for AllPhaseSettings {
+    type Item = PhaseSettings;
+
+    // Heap's algorithm, iteratively, w/ suspension. generators are coming...
+    fn next(&mut self) -> Option<Self::Item> {
+        if !self.started {
+            self.started = true;
+            return Some(self.setting);
+        }
+        while self.ptr < 5 {
+            if self.stack[self.ptr] < self.ptr {
+                if self.ptr % 2 == 0 {
+                    self.swap(0, self.ptr);
+                } else {
+                    self.swap(self.stack[self.ptr], self.ptr);
+                }
+                // return it, but first set up for reentrance
+                self.stack[self.ptr] += 1;
+                self.ptr = 0;
+                return Some(self.setting);
+            } else {
+                // on to the next!
+                self.stack[self.ptr] = 0;
+                self.ptr += 1;
+            }
+        }
+        None
+    }
+
+}
+
+fn thruster_signal(orig_prog: &Vec<i32>, phase_settings: &PhaseSettings) -> i32 {
     let mut signal = 0;
     let mut input = LinkedList::new();
     let mut output = LinkedList::new();

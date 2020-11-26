@@ -1,6 +1,16 @@
 use super::*;
 
 #[test]
+fn all_phases_iterator() {
+    let mut aps = AllPhaseSettings::new();
+    println!("{:?}", aps);
+    println!("{:?}", aps.next());
+    println!("{:?}", aps.next());
+    println!("{:?}", aps.next());
+    assert_eq!(aps.count(), 5 * 4 * 3 * 2 * 1 - 3) // 5!, minus the three already printed
+}
+
+#[test]
 fn example_one() {
     let prog = vec![3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0];
     let sig = thruster_signal(&prog, &[4,3,2,1,0]);
