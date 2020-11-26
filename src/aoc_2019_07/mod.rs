@@ -1,8 +1,10 @@
-use crate::cli;
-use crate::intcode;
-use std::collections::LinkedList;
+use std::collections::VecDeque;
 use std::sync::mpsc;
 use std::thread;
+
+use crate::cli;
+use crate::intcode;
+use crate::intcode::{Machine, Program};
 
 #[cfg(test)]
 mod test;
@@ -26,8 +28,8 @@ struct OptimalPhaseSettings {
     signal: i32,
 }
 
-fn find_optimal_phase_settings<F>(prog: &Vec<i32>, settings: PhaseSettings, generator: F) -> OptimalPhaseSettings
-where F: Fn(&Vec<i32>, &PhaseSettings) -> i32
+fn find_optimal_phase_settings<F>(prog: &Program, settings: PhaseSettings, generator: F) -> OptimalPhaseSettings
+where F: Fn(&Program, &PhaseSettings) -> i32
 {
     let mut best = OptimalPhaseSettings {
         settings: [0, 0, 0, 0, 0],
@@ -101,15 +103,15 @@ impl Iterator for AllPhaseSettings {
 
 }
 
-fn thruster_signal(orig_prog: &Vec<i32>, phase_settings: &PhaseSettings) -> i32 {
+fn thruster_signal(orig_prog: &Program, phase_settings: &PhaseSettings) -> i32 {
     let mut signal = 0;
-    let mut input = LinkedList::new();
-    let mut output = LinkedList::new();
+    let mut input = VecDeque::new();
+    let mut output = VecDeque::new();
     for phase in phase_settings.iter() {
         input.push_back(*phase);
         input.push_back(signal);
         let mut prog = orig_prog.clone();
-        let mut m = intcode::Machine::new(&mut prog);
+        let mut m = Machine::new(&mut prog);
         m.stdin(&mut input);
         m.stdout(&mut output);
         m.run();
@@ -118,75 +120,51 @@ fn thruster_signal(orig_prog: &Vec<i32>, phase_settings: &PhaseSettings) -> i32 
     signal
 }
 
-fn thruster_signal_with_feedback(orig_prog: &Vec<i32>, phase_settings: &PhaseSettings) -> i32 {
+fn thruster_signal_with_feedback(orig_prog: &Program, phase_settings: &PhaseSettings) -> i32 {
+    let mut senders = VecDeque::new();
+    let mut receivers = VecDeque::new();
+    for _ in 0..5 {
+        let (s, r) = mpsc::channel();
+        senders.push_back(s);
+        receivers.push_back(r);
+    }
 
-    // all this mutability means I have the wrong stuff on IntCode's IO types
-    let (mut aout, mut bin) = mpsc::channel();
-    let (mut bout, mut cin) = mpsc::channel();
-    let (mut cout, mut din) = mpsc::channel();
-    let (mut dout, mut ein) = mpsc::channel();
-    let (mut eout, mut ain) = mpsc::channel();
+    // rotate the senders around so they're indexed right
+    senders.rotate_right(1);
 
-        let mut aprog = orig_prog.clone();
-        let mut bprog = orig_prog.clone();
-        let mut cprog = orig_prog.clone();
-        let mut dprog = orig_prog.clone();
-        let mut eprog = orig_prog.clone();
+    // the phase settings
+    for (s, p) in senders.iter().zip(phase_settings) {
+        s.send(*p).expect("failed to send phase setting")
+    }
 
-    let toa = eout.clone();
-    let tob = aout.clone();
-    let toc = bout.clone();
-    let tod = cout.clone();
-    let toe = dout.clone();
+    senders.front().unwrap()
+        .send(0)
+        .expect("failed to send initial signal");
 
-    toa.send(phase_settings[0]);
-    tob.send(phase_settings[1]);
-    toc.send(phase_settings[2]);
-    tod.send(phase_settings[3]);
-    toe.send(phase_settings[4]);
+    // rotate the senders back...
+    senders.rotate_left(1);
 
-    toa.send(0);
+    // ...and the receivers forward
+    receivers.rotate_right(1);
 
     let mut threads = Vec::new();
-    threads.push(thread::spawn(move || {
-        let mut a = intcode::Machine::new(&mut aprog);
-
-        a.stdin(&mut ain);
-        a.stdout(&mut aout);
-        a.run();
-        ain.recv().unwrap() // the final signal
-    }));
-    threads.push(thread::spawn(move || {
-        let mut b = intcode::Machine::new(&mut bprog);
-
-        b.stdin(&mut bin);
-        b.stdout(&mut bout);
-        b.run();
-        0
-    }));
-    threads.push(thread::spawn(move || {
-        let mut c = intcode::Machine::new(&mut cprog);
-
-        c.stdin(&mut cin);
-        c.stdout(&mut cout);
-        c.run();
-        0
-    }));
-    threads.push(thread::spawn(move || {
-        let mut d = intcode::Machine::new(&mut dprog);
-
-        d.stdin(&mut din);
-        d.stdout(&mut dout);
-        d.run();
-        0
-    }));
-    threads.push(thread::spawn(move || {
-        let mut e = intcode::Machine::new(&mut eprog);
-        e.stdin(&mut ein);
-        e.stdout(&mut eout);
-        e.run();
-        0
-    }));
+    for (i, (mut s, mut r)) in senders
+        .into_iter()
+        .zip(receivers)
+        .enumerate() {
+        let mut prog = orig_prog.clone();
+        threads.push(thread::spawn(move || {
+            let mut m = Machine::new(&mut prog);
+            m.stdin(&mut r);
+            m.stdout(&mut s);
+            m.run();
+            if i == 0 {
+                r.recv().unwrap() // the final signal
+            } else {
+                0
+            }
+        }));
+    }
 
     let mut sig = -1;
     for t in threads {
