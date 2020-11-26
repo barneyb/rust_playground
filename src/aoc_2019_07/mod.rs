@@ -7,12 +7,15 @@ use std::thread;
 #[cfg(test)]
 mod test;
 
+const PHASES_SINGLE: [i32; 5] = [0, 1, 2, 3, 4];
+const PHASES_FEEDBACK: [i32; 5] = [5, 6, 7, 8, 9];
+
 pub fn run() {
     let filename = cli::aoc_filename("aoc_2019_07.txt");
     let orig_prog = intcode::read_from_file(filename);
 
-    println!("{:?}", find_optimal_phase_settings(&orig_prog, [0, 1, 2, 3, 4], thruster_signal));
-    println!("{:?}", find_optimal_phase_settings(&orig_prog, [5, 6, 7, 8, 9], thruster_signal_with_feedback));
+    println!("{:?}", find_optimal_phase_settings(&orig_prog, PHASES_SINGLE, thruster_signal));
+    println!("{:?}", find_optimal_phase_settings(&orig_prog, PHASES_FEEDBACK, thruster_signal_with_feedback));
 }
 
 type PhaseSettings = [i32; 5];
@@ -51,10 +54,6 @@ struct AllPhaseSettings {
 }
 
 impl AllPhaseSettings {
-    fn new() -> AllPhaseSettings {
-        AllPhaseSettings::from([0, 1, 2, 3, 4])
-    }
-
     fn from(settings: PhaseSettings) -> AllPhaseSettings {
         AllPhaseSettings {
             setting: settings,
