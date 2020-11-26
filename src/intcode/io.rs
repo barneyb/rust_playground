@@ -1,4 +1,4 @@
-use std::collections::LinkedList;
+use std::collections::{LinkedList, VecDeque};
 use std::sync::mpsc::{Receiver, Sender, SyncSender};
 
 pub trait InStream<T> {
@@ -15,6 +15,15 @@ impl<T> InStream<T> for Vec<T> {
 }
 
 impl<T> InStream<T> for LinkedList<T> {
+    fn read(&mut self) -> T {
+        match self.pop_front() {
+            Some(v) => v,
+            None => panic!("No input is available"),
+        }
+    }
+}
+
+impl<T> InStream<T> for VecDeque<T> {
     fn read(&mut self) -> T {
         match self.pop_front() {
             Some(v) => v,
@@ -40,6 +49,12 @@ impl<T> OutStream<T> for Vec<T> {
 }
 
 impl<T> OutStream<T> for LinkedList<T> {
+    fn write(&mut self, n: T) {
+        self.push_back(n)
+    }
+}
+
+impl<T> OutStream<T> for VecDeque<T> {
     fn write(&mut self, n: T) {
         self.push_back(n)
     }
