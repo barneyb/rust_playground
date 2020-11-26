@@ -47,6 +47,7 @@ impl<'a> Output<'a> {
 pub struct Machine<'a> {
     ip: usize,
     modes: i32,
+    rel_base: i32,
     program: &'a mut Program,
     stdin: Input<'a>,
     stdout: Output<'a>,
@@ -58,6 +59,7 @@ impl<'a> Machine<'a> {
         Machine {
             ip: 0,
             modes: 0,
+            rel_base: 0,
             program,
             stdin: Input { buffer: None },
             stdout: Output { buffer: None },
@@ -119,6 +121,10 @@ impl<'a> Machine<'a> {
                 let c = self.next_position();
                 self.program[c] = if a == b { 1 } else { 0 };
             },
+            9 => {
+                let a = self.next_param();
+                self.rel_base += a;
+            }
             99 => self.ip = usize::max_value(),
             opcode => panic!("Unknown opcode {} (at position {})", opcode, self.ip - 1),
         };
@@ -141,6 +147,7 @@ impl<'a> Machine<'a> {
         v = match self.modes % 10 {
             0 => self.program[v as usize], // position
             1 => v, // immediate
+            2 => self.program[(self.rel_base + v) as usize], // position
             m => panic!("Unknown parameter mode {}", m),
         };
         self.modes /= 10;
