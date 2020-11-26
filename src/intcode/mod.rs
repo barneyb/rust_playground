@@ -4,7 +4,9 @@ use self::io::{InStream, OutStream};
 
 mod io;
 
-pub fn read_from_file(filename: String) -> Vec<i32> {
+pub type Program = Vec<i32>;
+
+pub fn read_from_file(filename: String) -> Program {
     fs::read_to_string(filename)
         .unwrap()
         .trim()
@@ -41,14 +43,14 @@ impl<'a> Output<'a> {
 pub struct Machine<'a> {
     ip: usize,
     modes: i32,
-    program: &'a mut Vec<i32>,
+    program: &'a mut Program,
     stdin: Input<'a>,
     stdout: Output<'a>,
 }
 
 impl<'a> Machine<'a> {
 
-    pub fn new(program: &mut Vec<i32>) -> Machine {
+    pub fn new(program: &mut Program) -> Machine {
         Machine {
             ip: 0,
             modes: 0,
