@@ -5,8 +5,6 @@ use std::ops::{Add, Mul};
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
 
-mod io;
-
 #[cfg(test)]
 mod test;
 
@@ -20,31 +18,6 @@ pub fn read_from_file(filename: String) -> Program {
         .map(|a| a.parse().expect(&format!("couldn't parse '{}'", a)))
         .collect()
 }
-
-// struct Input<'a> {
-//     buffer: Option<&'a mut dyn io::InStream<i32>>,
-// }
-//
-// impl<'a> Input<'a> {
-//     fn read(&mut self) -> i32 {
-//         match &mut self.buffer {
-//             Some(b) => b.read(),
-//             None => panic!("No input is available!")
-//         }
-//     }
-// }
-//
-// struct Output<'a> {
-//     buffer: Option<&'a mut dyn io::OutStream<i32>>,
-// }
-//
-// impl<'a> Output<'a> {
-//     fn write(&mut self, n: i32) {
-//         if let Some(b) = &mut self.buffer {
-//             b.write(n)
-//         }
-//     }
-// }
 
 pub struct Machine {
     ip: usize,
@@ -142,10 +115,10 @@ impl Machine {
             6 => self.conditional_jump_op(|a| a == 0),
             7 => self.binary_op(|a, b| if a < b { 1 } else { 0 }),
             8 => self.binary_op(|a, b| if a == b { 1 } else { 0 }),
-            // 9 => {
-            //     let a = self.next_param();
-            //     self.rel_base += a;
-            // }
+            9 => {
+                let a = self.next_param();
+                self.rel_base += a;
+            }
             99 => self.ip = usize::max_value(),
             opcode => panic!("Unknown opcode {} (at position {})", opcode, self.ip - 1),
         };
