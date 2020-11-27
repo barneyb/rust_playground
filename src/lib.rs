@@ -58,3 +58,18 @@ impl<'a> Utilities<'a> {
     }
 
 }
+
+#[test]
+fn aoc_should_not_smoke() {
+    let utils = Utilities::new();
+    utils.names().iter()
+        .filter(|n| n.starts_with("aoc_"))
+        .for_each(|&n| {
+            println!("-- {} --------------------------------------------", n);
+            if let Ok(_) = std::fs::read_to_string(n.to_owned() + ".txt") {
+                utils.by_name(n).unwrap()()
+            } else {
+                println!("... no input file found - skipping ...")
+            }
+        })
+}
