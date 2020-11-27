@@ -4,7 +4,7 @@ use std::thread;
 
 use crate::cli;
 use crate::intcode;
-use crate::intcode::{Machine, Program};
+use crate::intcode::{Machine, one_off_output, Program};
 
 #[cfg(test)]
 mod test;
@@ -103,19 +103,11 @@ impl Iterator for AllPhaseSettings {
 
 }
 
-fn thruster_signal(orig_prog: &Program, phase_settings: &PhaseSettings) -> i32 {
+fn thruster_signal(prog: &Program, phase_settings: &PhaseSettings) -> i32 {
     let mut signal = 0;
-    let mut input = VecDeque::new();
-    let mut output = VecDeque::new();
     for phase in phase_settings.iter() {
-        input.push_back(*phase);
-        input.push_back(signal);
-        let mut prog = orig_prog.clone();
-        let mut m = Machine::new(&mut prog);
-        m.stdin(&mut input);
-        m.stdout(&mut output);
-        m.run();
-        signal = output.pop_front().unwrap();
+        let output = one_off_output(&prog, Some(vec![*phase, signal]));
+        signal = output[0];
     }
     signal
 }
@@ -124,9 +116,9 @@ fn thruster_signal_with_feedback(orig_prog: &Program, phase_settings: &PhaseSett
     let mut senders = VecDeque::new();
     let mut receivers = VecDeque::new();
     for _ in 0..5 {
-        let (s, r) = mpsc::channel();
-        senders.push_back(s);
-        receivers.push_back(r);
+        let (tx, rx) = mpsc::channel();
+        senders.push_back(tx);
+        receivers.push_back(rx);
     }
 
     // rotate the senders around so they're indexed right
@@ -148,29 +140,23 @@ fn thruster_signal_with_feedback(orig_prog: &Program, phase_settings: &PhaseSett
     receivers.rotate_right(1);
 
     let mut threads = Vec::new();
-    for (i, (mut s, mut r)) in senders
+    for (tx, rx) in senders
         .into_iter()
-        .zip(receivers)
-        .enumerate() {
+        .zip(receivers) {
         let mut prog = orig_prog.clone();
         threads.push(thread::spawn(move || {
             let mut m = Machine::new(&mut prog);
-            m.stdin(&mut r);
-            m.stdout(&mut s);
-            m.run();
-            if i == 0 {
-                r.recv().unwrap() // the final signal
-            } else {
-                0
-            }
+            m.with_stdin(rx);
+            m.with_stdout(tx);
+            m.run().unwrap()
         }));
     }
 
     let mut sig = -1;
     for t in threads {
-        let s = t.join();
+        let result = t.join();
         if sig < 0 {
-            sig = s.unwrap()
+            sig = result.unwrap().recv().unwrap() // the final signal
         }
     }
 

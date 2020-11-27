@@ -108,12 +108,13 @@ impl Machine {
         self.stdout = Some(tx);
     }
 
-    pub fn run(&mut self) {
+    /// I execute the program, and return my STDIN
+    pub fn run(&mut self) -> Option<Receiver<i32>> {
         while !self.halted() {
             self.step();
         }
-        self.stdin = None;
         self.stdout = None;
+        std::mem::take(&mut self.stdin)
     }
 
     fn step(&mut self) {
