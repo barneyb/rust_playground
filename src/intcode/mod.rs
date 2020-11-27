@@ -1,8 +1,9 @@
-// use self::io::{InStream, OutStream};
 use std::collections::HashMap;
 use std::fs;
 use std::ops::{Add, Mul};
 use std::sync::mpsc;
+
+use crate::intcode::Mode::{Immediate, Position, Relative};
 
 #[cfg(test)]
 mod test;
@@ -30,6 +31,12 @@ pub struct Machine {
     memory: HashMap<usize, Int>,
     stdin: Option<RxInt>,
     stdout: Option<TxInt>,
+}
+
+enum Mode {
+    Position(),
+    Immediate(),
+    Relative(),
 }
 
 #[allow(dead_code)]
@@ -102,10 +109,10 @@ impl Machine {
             2 => self.binary_op(Int::mul),
             3 => {
                 let pos = self.next_position();
-                self.program[pos] = match &self.stdin {
+                self.write_addr(pos, match &self.stdin {
                     Some(rx) => rx.recv().expect("Failed to read from STDIN"),
                     None => panic!("No STDIN is connected"),
-                };
+                });
             },
             4 => {
                 let value = self.next_param();
@@ -158,20 +165,33 @@ impl Machine {
         i % 100
     }
 
-    fn next_param(&mut self) -> Int {
-        let mut v = self.next();
-        v = match self.modes % 10 {
-            0 => self.read_addr(v as usize), // position
-            1 => v, // immediate
-            2 => self.read_addr((self.rel_base + v) as usize), // position
-            m => panic!("Unknown parameter mode {}", m),
-        };
+    fn next_mode(&mut self) -> Mode {
+        let m = self.modes % 10;
         self.modes /= 10;
-        v
+        match m {
+            0 => Position(),
+            1 => Immediate(), // immediate
+            2 => Relative(), // relative
+            md => panic!("Unknown parameter mode {}", md),
+        }
+    }
+
+    fn next_param(&mut self) -> Int {
+        let v = self.next();
+        match self.next_mode() {
+            Position() => self.read_addr(v as usize),
+            Immediate() => v,
+            Relative() => self.read_addr((self.rel_base + v) as usize),
+        }
     }
 
     fn next_position(&mut self) -> usize {
-        self.next() as usize
+        let v = self.next();
+        (match self.next_mode() {
+            Position() => v,
+            Immediate() => panic!("Positions cannot use immediate mode"),
+            Relative() => self.rel_base + v,
+        }) as usize
     }
 
     fn binary_op<F>(&mut self, mut op: F)
