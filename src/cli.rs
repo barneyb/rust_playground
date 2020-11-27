@@ -8,7 +8,11 @@ pub fn cmd_args() -> env::Args {
 
 pub fn util_args() -> env::Args {
     let mut args = cmd_args();
-    args.next(); // kill utility name
+    if let Some(n) = args.next() {
+        if n.starts_with("-") {
+            while let Some(_) = args.next() {}
+        }
+    }
     args
 }
 
