@@ -73,3 +73,25 @@ fn equals_immediate() {
     let output = one_off_output(&prog, Some(vec![12]));
     assert_eq!(output, vec![0]);
 }
+
+#[test]
+fn quine() {
+    let prog = vec![109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99];
+    let output = one_off_output(&prog, None);
+    assert_eq!(prog, output)
+}
+
+#[test]
+fn compute_16_digit_number() {
+    let prog = vec![1102,34915192,34915192,7,4,7,99,0];
+    let output = one_off_output(&prog, None);
+    assert_eq!(output[0].to_string().len(), 16)
+}
+
+#[test]
+fn output_huge_number() {
+    let n = 1125899906842624;
+    let prog = vec![104, n, 99];
+    let output = one_off_output(&prog, None);
+    assert_eq!(output[0], n)
+}

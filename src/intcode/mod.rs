@@ -3,12 +3,15 @@ use std::collections::HashMap;
 use std::fs;
 use std::ops::{Add, Mul};
 use std::sync::mpsc;
-use std::sync::mpsc::{Receiver, Sender};
 
 #[cfg(test)]
 mod test;
 
-pub type Program = Vec<i32>;
+pub type Int = i64;
+pub type Program = Vec<Int>;
+pub type Buffer = Vec<Int>;
+pub type TxInt = mpsc::Sender<Int>;
+pub type RxInt = mpsc::Receiver<Int>;
 
 pub fn read_from_file(filename: String) -> Program {
     fs::read_to_string(filename)
@@ -21,24 +24,24 @@ pub fn read_from_file(filename: String) -> Program {
 
 pub struct Machine {
     ip: usize,
-    modes: i32,
-    rel_base: i32,
+    modes: Int,
+    rel_base: Int,
     program: Program,
-    memory: HashMap<usize, i32>,
-    stdin: Option<Receiver<i32>>,
-    stdout: Option<Sender<i32>>,
+    memory: HashMap<usize, Int>,
+    stdin: Option<RxInt>,
+    stdout: Option<TxInt>,
 }
 
 #[allow(dead_code)]
-pub fn one_off_machine(prog: &Program, input: Option<Vec<i32>>) -> Machine {
+pub fn one_off_machine(prog: &Program, input: Option<Buffer>) -> Machine {
     one_off(prog, input).0
 }
 
-pub fn one_off_output(prog: &Program, input: Option<Vec<i32>>) -> Vec<i32> {
+pub fn one_off_output(prog: &Program, input: Option<Buffer>) -> Buffer {
     one_off(prog, input).1
 }
 
-fn one_off(prog: &Program, input: Option<Vec<i32>>) -> (Machine, Vec<i32>) {
+fn one_off(prog: &Program, input: Option<Buffer>) -> (Machine, Buffer) {
     let mut m = Machine::new(&prog);
 
     if let Some(input) = input {
@@ -73,16 +76,16 @@ impl Machine {
         }
     }
 
-    pub fn with_stdin(&mut self, rx: Receiver<i32>) {
+    pub fn with_stdin(&mut self, rx: RxInt) {
         self.stdin = Some(rx);
     }
 
-    pub fn with_stdout(&mut self, tx: Sender<i32>) {
+    pub fn with_stdout(&mut self, tx: TxInt) {
         self.stdout = Some(tx);
     }
 
     /// I execute the program, and return my STDIN
-    pub fn run(&mut self) -> Option<Receiver<i32>> {
+    pub fn run(&mut self) -> Option<RxInt> {
         while !self.halted() {
             self.step();
         }
@@ -95,8 +98,8 @@ impl Machine {
             panic!("Can't step when already halted");
         }
         match self.next_op() {
-            1 => self.binary_op(i32::add),
-            2 => self.binary_op(i32::mul),
+            1 => self.binary_op(Int::add),
+            2 => self.binary_op(Int::mul),
             3 => {
                 let pos = self.next_position();
                 self.program[pos] = match &self.stdin {
@@ -124,7 +127,7 @@ impl Machine {
         };
     }
 
-    pub fn read_addr(&self, addr: usize) -> i32 {
+    pub fn read_addr(&self, addr: usize) -> Int {
         if addr < self.program.len() {
             self.program[addr]
         } else {
@@ -135,7 +138,7 @@ impl Machine {
         }
     }
 
-    pub fn write_addr(&mut self, addr: usize, value: i32) {
+    pub fn write_addr(&mut self, addr: usize, value: Int) {
         if addr < self.program.len() {
             self.program[addr] = value;
         } else {
@@ -143,19 +146,19 @@ impl Machine {
         }
     }
 
-    fn next(&mut self) -> i32 {
+    fn next(&mut self) -> Int {
         let v = self.read_addr(self.ip);
         self.ip += 1;
         v
     }
 
-    fn next_op(&mut self) -> i32 {
+    fn next_op(&mut self) -> Int {
         let i = self.next();
         self.modes = i / 100;
         i % 100
     }
 
-    fn next_param(&mut self) -> i32 {
+    fn next_param(&mut self) -> Int {
         let mut v = self.next();
         v = match self.modes % 10 {
             0 => self.read_addr(v as usize), // position
@@ -172,7 +175,7 @@ impl Machine {
     }
 
     fn binary_op<F>(&mut self, mut op: F)
-        where F: FnMut(i32, i32) -> i32
+        where F: FnMut(Int, Int) -> Int
     {
         let a = self.next_param();
         let b = self.next_param();
@@ -181,7 +184,7 @@ impl Machine {
     }
 
     fn conditional_jump_op<F>(&mut self, mut test: F)
-        where F: FnMut(i32) -> bool
+        where F: FnMut(Int) -> bool
     {
         let a = self.next_param();
         let b = self.next_param();

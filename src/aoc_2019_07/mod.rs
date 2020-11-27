@@ -4,32 +4,32 @@ use std::thread;
 
 use crate::cli;
 use crate::intcode;
-use crate::intcode::{Machine, one_off_output, Program};
+use crate::intcode::{Int, Machine, one_off_output, Program};
 
 #[cfg(test)]
 mod test;
 
-const PHASES_SINGLE: [i32; 5] = [0, 1, 2, 3, 4];
-const PHASES_FEEDBACK: [i32; 5] = [5, 6, 7, 8, 9];
+const PHASES_SINGLE: [Int; 5] = [0, 1, 2, 3, 4];
+const PHASES_FEEDBACK: [Int; 5] = [5, 6, 7, 8, 9];
 
 pub fn run() {
     let filename = cli::aoc_filename("aoc_2019_07.txt");
-    let orig_prog = intcode::read_from_file(filename);
+    let prog = intcode::read_from_file(filename);
 
-    println!("{:?}", find_optimal_phase_settings(&orig_prog, PHASES_SINGLE, thruster_signal));
-    println!("{:?}", find_optimal_phase_settings(&orig_prog, PHASES_FEEDBACK, thruster_signal_with_feedback));
+    println!("{:?}", find_optimal_phase_settings(&prog, PHASES_SINGLE, thruster_signal));
+    println!("{:?}", find_optimal_phase_settings(&prog, PHASES_FEEDBACK, thruster_signal_with_feedback));
 }
 
-type PhaseSettings = [i32; 5];
+type PhaseSettings = [Int; 5];
 
 #[derive(Debug)]
 struct OptimalPhaseSettings {
     settings: PhaseSettings,
-    signal: i32,
+    signal: Int,
 }
 
 fn find_optimal_phase_settings<F>(prog: &Program, settings: PhaseSettings, generator: F) -> OptimalPhaseSettings
-where F: Fn(&Program, &PhaseSettings) -> i32
+where F: Fn(&Program, &PhaseSettings) -> Int
 {
     let mut best = OptimalPhaseSettings {
         settings: [0, 0, 0, 0, 0],
@@ -103,7 +103,7 @@ impl Iterator for AllPhaseSettings {
 
 }
 
-fn thruster_signal(prog: &Program, phase_settings: &PhaseSettings) -> i32 {
+fn thruster_signal(prog: &Program, phase_settings: &PhaseSettings) -> Int {
     let mut signal = 0;
     for phase in phase_settings.iter() {
         let output = one_off_output(&prog, Some(vec![*phase, signal]));
@@ -112,7 +112,7 @@ fn thruster_signal(prog: &Program, phase_settings: &PhaseSettings) -> i32 {
     signal
 }
 
-fn thruster_signal_with_feedback(orig_prog: &Program, phase_settings: &PhaseSettings) -> i32 {
+fn thruster_signal_with_feedback(orig_prog: &Program, phase_settings: &PhaseSettings) -> Int {
     let mut senders = VecDeque::new();
     let mut receivers = VecDeque::new();
     for _ in 0..5 {
