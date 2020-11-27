@@ -97,36 +97,36 @@ impl Machine {
             //     let value = self.next_param();
             //     self.stdout.write(value)
             // },
-            5 => {
-                let a = self.next_param();
-                let b = self.next_param();
-                if a != 0 {
-                    self.ip = b as usize;
-                }
-            },
-            6 => {
-                let a = self.next_param();
-                let b = self.next_param();
-                if a == 0 {
-                    self.ip = b as usize;
-                }
-            },
-            7 => {
-                let a = self.next_param();
-                let b = self.next_param();
-                let c = self.next_position();
-                self.write_addr(c, if a < b { 1 } else { 0 });
-            },
-            8 => {
-                let a = self.next_param();
-                let b = self.next_param();
-                let c = self.next_position();
-                self.write_addr(c, if a == b { 1 } else { 0 });
-            },
-            9 => {
-                let a = self.next_param();
-                self.rel_base += a;
-            }
+            // 5 => {
+            //     let a = self.next_param();
+            //     let b = self.next_param();
+            //     if a != 0 {
+            //         self.ip = b as usize;
+            //     }
+            // },
+            // 6 => {
+            //     let a = self.next_param();
+            //     let b = self.next_param();
+            //     if a == 0 {
+            //         self.ip = b as usize;
+            //     }
+            // },
+            // 7 => {
+            //     let a = self.next_param();
+            //     let b = self.next_param();
+            //     let c = self.next_position();
+            //     self.write_addr(c, if a < b { 1 } else { 0 });
+            // },
+            // 8 => {
+            //     let a = self.next_param();
+            //     let b = self.next_param();
+            //     let c = self.next_position();
+            //     self.write_addr(c, if a == b { 1 } else { 0 });
+            // },
+            // 9 => {
+            //     let a = self.next_param();
+            //     self.rel_base += a;
+            // }
             99 => self.ip = usize::max_value(),
             opcode => panic!("Unknown opcode {} (at position {})", opcode, self.ip - 1),
         };
