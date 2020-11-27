@@ -1,7 +1,7 @@
 use std::fs;
 use std::ops::{Add, Mul};
 
-use self::io::{InStream, OutStream};
+// use self::io::{InStream, OutStream};
 
 mod io;
 
@@ -19,38 +19,38 @@ pub fn read_from_file(filename: String) -> Program {
         .collect()
 }
 
-struct Input<'a> {
-    buffer: Option<&'a mut dyn io::InStream<i32>>,
-}
-
-impl<'a> Input<'a> {
-    fn read(&mut self) -> i32 {
-        match &mut self.buffer {
-            Some(b) => b.read(),
-            None => panic!("No input is available!")
-        }
-    }
-}
-
-struct Output<'a> {
-    buffer: Option<&'a mut dyn io::OutStream<i32>>,
-}
-
-impl<'a> Output<'a> {
-    fn write(&mut self, n: i32) {
-        if let Some(b) = &mut self.buffer {
-            b.write(n)
-        }
-    }
-}
+// struct Input<'a> {
+//     buffer: Option<&'a mut dyn io::InStream<i32>>,
+// }
+//
+// impl<'a> Input<'a> {
+//     fn read(&mut self) -> i32 {
+//         match &mut self.buffer {
+//             Some(b) => b.read(),
+//             None => panic!("No input is available!")
+//         }
+//     }
+// }
+//
+// struct Output<'a> {
+//     buffer: Option<&'a mut dyn io::OutStream<i32>>,
+// }
+//
+// impl<'a> Output<'a> {
+//     fn write(&mut self, n: i32) {
+//         if let Some(b) = &mut self.buffer {
+//             b.write(n)
+//         }
+//     }
+// }
 
 pub struct Machine<'a> {
     ip: usize,
     modes: i32,
     rel_base: i32,
     program: &'a mut Program,
-    stdin: Input<'a>,
-    stdout: Output<'a>,
+    // stdin: Input<'a>,
+    // stdout: Output<'a>,
 }
 
 impl<'a> Machine<'a> {
@@ -61,18 +61,18 @@ impl<'a> Machine<'a> {
             modes: 0,
             rel_base: 0,
             program,
-            stdin: Input { buffer: None },
-            stdout: Output { buffer: None },
+            // stdin: Input { buffer: None },
+            // stdout: Output { buffer: None },
         }
     }
 
-    pub fn stdin(&mut self, buffer: &'a mut dyn InStream<i32>) {
-        self.stdin = Input { buffer: Some(buffer) }
-    }
-
-    pub fn stdout(&mut self, buffer: &'a mut dyn OutStream<i32>) {
-        self.stdout = Output { buffer: Some(buffer) }
-    }
+    // pub fn stdin(&mut self, buffer: &'a mut dyn InStream<i32>) {
+    //     self.stdin = Input { buffer: Some(buffer) }
+    // }
+    //
+    // pub fn stdout(&mut self, buffer: &'a mut dyn OutStream<i32>) {
+    //     self.stdout = Output { buffer: Some(buffer) }
+    // }
 
     pub fn run(&mut self) {
         while !self.halted() {
@@ -87,14 +87,14 @@ impl<'a> Machine<'a> {
         match self.next_op() {
             1 => self.binary_op(i32::add),
             2 => self.binary_op(i32::mul),
-            3 => {
-                let pos = self.next_position();
-                self.program[pos] = self.stdin.read()
-            },
-            4 => {
-                let value = self.next_param();
-                self.stdout.write(value)
-            },
+            // 3 => {
+            //     let pos = self.next_position();
+            //     self.program[pos] = self.stdin.read()
+            // },
+            // 4 => {
+            //     let value = self.next_param();
+            //     self.stdout.write(value)
+            // },
             5 => {
                 let a = self.next_param();
                 let b = self.next_param();
