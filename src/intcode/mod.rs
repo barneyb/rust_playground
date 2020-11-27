@@ -2,6 +2,8 @@
 use std::collections::HashMap;
 use std::fs;
 use std::ops::{Add, Mul};
+use std::sync::mpsc;
+use std::sync::mpsc::{Receiver, Sender};
 
 mod io;
 
@@ -50,8 +52,38 @@ pub struct Machine {
     rel_base: i32,
     program: Program,
     memory: HashMap<usize, i32>,
-    // stdin: Input<'a>,
-    // stdout: Output<'a>,
+    stdin: Option<Receiver<i32>>,
+    stdout: Option<Sender<i32>>,
+}
+
+#[allow(dead_code)]
+pub fn one_off_machine(prog: &Program, input: Option<Vec<i32>>) -> Machine {
+    one_off(prog, input).0
+}
+
+pub fn one_off_output(prog: &Program, input: Option<Vec<i32>>) -> Vec<i32> {
+    one_off(prog, input).1
+}
+
+fn one_off(prog: &Program, input: Option<Vec<i32>>) -> (Machine, Vec<i32>) {
+    let mut m = Machine::new(&prog);
+
+    if let Some(input) = input {
+        let (tx, rx) = mpsc::channel();
+        for v in input {
+            tx.send(v).expect("failed to send");
+        }
+        m.with_stdin(rx);
+    }
+
+    let (tx, rx) = mpsc::channel();
+    m.with_stdout(tx);
+    m.run();
+    let mut output = Vec::new();
+    for v in rx {
+        output.push(v)
+    }
+    (m, output)
 }
 
 impl Machine {
@@ -63,23 +95,25 @@ impl Machine {
             rel_base: 0,
             program: program.clone(),
             memory: HashMap::new(),
-            // stdin: Input { buffer: None },
-            // stdout: Output { buffer: None },
+            stdin: None,
+            stdout: None,
         }
     }
 
-    // pub fn stdin(&mut self, buffer: &'a mut dyn InStream<i32>) {
-    //     self.stdin = Input { buffer: Some(buffer) }
-    // }
-    //
-    // pub fn stdout(&mut self, buffer: &'a mut dyn OutStream<i32>) {
-    //     self.stdout = Output { buffer: Some(buffer) }
-    // }
+    pub fn with_stdin(&mut self, rx: Receiver<i32>) {
+        self.stdin = Some(rx);
+    }
+
+    pub fn with_stdout(&mut self, tx: Sender<i32>) {
+        self.stdout = Some(tx);
+    }
 
     pub fn run(&mut self) {
         while !self.halted() {
             self.step();
         }
+        self.stdin = None;
+        self.stdout = None;
     }
 
     fn step(&mut self) {
@@ -89,40 +123,24 @@ impl Machine {
         match self.next_op() {
             1 => self.binary_op(i32::add),
             2 => self.binary_op(i32::mul),
-            // 3 => {
-            //     let pos = self.next_position();
-            //     self.program[pos] = self.stdin.read()
-            // },
-            // 4 => {
-            //     let value = self.next_param();
-            //     self.stdout.write(value)
-            // },
-            // 5 => {
-            //     let a = self.next_param();
-            //     let b = self.next_param();
-            //     if a != 0 {
-            //         self.ip = b as usize;
-            //     }
-            // },
-            // 6 => {
-            //     let a = self.next_param();
-            //     let b = self.next_param();
-            //     if a == 0 {
-            //         self.ip = b as usize;
-            //     }
-            // },
-            // 7 => {
-            //     let a = self.next_param();
-            //     let b = self.next_param();
-            //     let c = self.next_position();
-            //     self.write_addr(c, if a < b { 1 } else { 0 });
-            // },
-            // 8 => {
-            //     let a = self.next_param();
-            //     let b = self.next_param();
-            //     let c = self.next_position();
-            //     self.write_addr(c, if a == b { 1 } else { 0 });
-            // },
+            3 => {
+                let pos = self.next_position();
+                self.program[pos] = match &self.stdin {
+                    Some(rx) => rx.recv().expect("Failed to read from STDIN"),
+                    None => panic!("No STDIN is connected"),
+                };
+            },
+            4 => {
+                let value = self.next_param();
+                match &self.stdout {
+                    Some(tx) => tx.send(value).expect("Failed to send to STDOUT"),
+                    None => println!("{}", value),
+                }
+            },
+            5 => self.conditional_jump_op(|a| a != 0),
+            6 => self.conditional_jump_op(|a| a == 0),
+            7 => self.binary_op(|a, b| if a < b { 1 } else { 0 }),
+            8 => self.binary_op(|a, b| if a == b { 1 } else { 0 }),
             // 9 => {
             //     let a = self.next_param();
             //     self.rel_base += a;
@@ -179,13 +197,23 @@ impl Machine {
         self.next() as usize
     }
 
-    fn binary_op<F>(&mut self, mut f: F)
+    fn binary_op<F>(&mut self, mut op: F)
         where F: FnMut(i32, i32) -> i32
     {
         let a = self.next_param();
         let b = self.next_param();
         let c = self.next_position();
-        self.write_addr(c, f(a, b));
+        self.write_addr(c, op(a, b));
+    }
+
+    fn conditional_jump_op<F>(&mut self, mut test: F)
+        where F: FnMut(i32) -> bool
+    {
+        let a = self.next_param();
+        let b = self.next_param();
+        if test(a) {
+            self.ip = b as usize;
+        }
     }
 
     fn halted(&self) -> bool {
