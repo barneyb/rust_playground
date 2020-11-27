@@ -19,9 +19,9 @@ pub fn run() {
 }
 
 fn eval_noun_verb(prog: &Vec<i32>, noun: i32, verb: i32) -> i32 {
-    let mut prog = prog.clone();
-    prog[1] = noun;
-    prog[2] = verb;
-    intcode::Machine::new(&mut prog).run();
-    prog[0]
+    let mut m = intcode::Machine::new(&prog);
+    m.write_addr(1, noun);
+    m.write_addr(2, verb);
+    m.run();
+    m.read_addr(0)
 }

@@ -1,7 +1,7 @@
+// use self::io::{InStream, OutStream};
+use std::collections::HashMap;
 use std::fs;
 use std::ops::{Add, Mul};
-
-// use self::io::{InStream, OutStream};
 
 mod io;
 
@@ -44,23 +44,25 @@ pub fn read_from_file(filename: String) -> Program {
 //     }
 // }
 
-pub struct Machine<'a> {
+pub struct Machine {
     ip: usize,
     modes: i32,
     rel_base: i32,
-    program: &'a mut Program,
+    program: Program,
+    memory: HashMap<usize, i32>,
     // stdin: Input<'a>,
     // stdout: Output<'a>,
 }
 
-impl<'a> Machine<'a> {
+impl Machine {
 
-    pub fn new(program: &mut Program) -> Machine {
+    pub fn new(program: &Program) -> Machine {
         Machine {
             ip: 0,
             modes: 0,
             rel_base: 0,
-            program,
+            program: program.clone(),
+            memory: HashMap::new(),
             // stdin: Input { buffer: None },
             // stdout: Output { buffer: None },
         }
@@ -113,13 +115,13 @@ impl<'a> Machine<'a> {
                 let a = self.next_param();
                 let b = self.next_param();
                 let c = self.next_position();
-                self.program[c] = if a < b { 1 } else { 0 };
+                self.write_addr(c, if a < b { 1 } else { 0 });
             },
             8 => {
                 let a = self.next_param();
                 let b = self.next_param();
                 let c = self.next_position();
-                self.program[c] = if a == b { 1 } else { 0 };
+                self.write_addr(c, if a == b { 1 } else { 0 });
             },
             9 => {
                 let a = self.next_param();
@@ -130,8 +132,27 @@ impl<'a> Machine<'a> {
         };
     }
 
+    pub fn read_addr(&self, addr: usize) -> i32 {
+        if addr < self.program.len() {
+            self.program[addr]
+        } else {
+            match self.memory.get(&addr) {
+                Some(v) => *v,
+                None => 0,
+            }
+        }
+    }
+
+    pub fn write_addr(&mut self, addr: usize, value: i32) {
+        if addr < self.program.len() {
+            self.program[addr] = value;
+        } else {
+            self.memory.insert(addr, value);
+        }
+    }
+
     fn next(&mut self) -> i32 {
-        let v = self.program[self.ip];
+        let v = self.read_addr(self.ip);
         self.ip += 1;
         v
     }
@@ -145,9 +166,9 @@ impl<'a> Machine<'a> {
     fn next_param(&mut self) -> i32 {
         let mut v = self.next();
         v = match self.modes % 10 {
-            0 => self.program[v as usize], // position
+            0 => self.read_addr(v as usize), // position
             1 => v, // immediate
-            2 => self.program[(self.rel_base + v) as usize], // position
+            2 => self.read_addr((self.rel_base + v) as usize), // position
             m => panic!("Unknown parameter mode {}", m),
         };
         self.modes /= 10;
@@ -164,7 +185,7 @@ impl<'a> Machine<'a> {
         let a = self.next_param();
         let b = self.next_param();
         let c = self.next_position();
-        self.program[c] = f(a, b);
+        self.write_addr(c, f(a, b));
     }
 
     fn halted(&self) -> bool {

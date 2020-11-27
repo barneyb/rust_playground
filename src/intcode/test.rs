@@ -2,39 +2,44 @@ use super::*;
 
 #[test]
 fn part_one_discussion() {
-    let mut prog = vec![1,9,10,3,2,3,11,0,99,30,40,50];
-    Machine::new(&mut prog).run();
-    assert_eq!(prog[3], 70);
-    assert_eq!(prog[0], 3500);
+    let prog = vec![1,9,10,3,2,3,11,0,99,30,40,50];
+    let mut m = Machine::new(&prog);
+    m.run();
+    assert_eq!(m.read_addr(3), 70);
+    assert_eq!(m.read_addr(0), 3500);
 }
 
 #[test]
 fn part_one_example_one() {
-    let mut prog = vec![1,0,0,0,99];
-    Machine::new(&mut prog).run();
-    assert_eq!(prog[0], 2);
+    let prog = vec![1,0,0,0,99];
+    let mut m = Machine::new(&prog);
+    m.run();
+    assert_eq!(m.read_addr(0), 2);
 }
 
 #[test]
 fn part_one_example_two() {
-    let mut prog = vec![2,3,0,3,99];
-    Machine::new(&mut prog).run();
-    assert_eq!(prog[3], 6);
+    let prog = vec![2,3,0,3,99];
+    let mut m = Machine::new(&prog);
+    m.run();
+    assert_eq!(m.read_addr(3), 6);
 }
 
 #[test]
 fn part_one_example_three() {
-    let mut prog = vec![2,4,4,5,99,0];
-    Machine::new(&mut prog).run();
-    assert_eq!(prog[5], 9801);
+    let prog = vec![2,4,4,5,99,0];
+    let mut m = Machine::new(&prog);
+    m.run();
+    assert_eq!(m.read_addr(5), 9801);
 }
 
 #[test]
 fn part_one_example_four() {
-    let mut prog = vec![1,1,1,4,99,5,6,0,99];
-    Machine::new(&mut prog).run();
-    assert_eq!(prog[0], 30);
-    assert_eq!(prog[4], 2);
+    let prog = vec![1,1,1,4,99,5,6,0,99];
+    let mut m = Machine::new(&prog);
+    m.run();
+    assert_eq!(m.read_addr(0), 30);
+    assert_eq!(m.read_addr(4), 2);
 }
 
 // #[test]
