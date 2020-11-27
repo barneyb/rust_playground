@@ -34,9 +34,7 @@ pub struct Machine {
 }
 
 enum Mode {
-    Position(),
-    Immediate(),
-    Relative(),
+    Position, Immediate, Relative,
 }
 
 #[allow(dead_code)]
@@ -169,9 +167,9 @@ impl Machine {
         let m = self.modes % 10;
         self.modes /= 10;
         match m {
-            0 => Position(),
-            1 => Immediate(), // immediate
-            2 => Relative(), // relative
+            0 => Position,
+            1 => Immediate, // immediate
+            2 => Relative, // relative
             md => panic!("Unknown parameter mode {}", md),
         }
     }
@@ -179,18 +177,18 @@ impl Machine {
     fn next_param(&mut self) -> Int {
         let v = self.next();
         match self.next_mode() {
-            Position() => self.read_addr(v as usize),
-            Immediate() => v,
-            Relative() => self.read_addr((self.rel_base + v) as usize),
+            Position => self.read_addr(v as usize),
+            Immediate => v,
+            Relative => self.read_addr((self.rel_base + v) as usize),
         }
     }
 
     fn next_position(&mut self) -> usize {
         let v = self.next();
         (match self.next_mode() {
-            Position() => v,
-            Immediate() => panic!("Positions cannot use immediate mode"),
-            Relative() => self.rel_base + v,
+            Position => v,
+            Immediate => panic!("Positions cannot use immediate mode"),
+            Relative => self.rel_base + v,
         }) as usize
     }
 
