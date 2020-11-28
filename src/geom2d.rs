@@ -59,22 +59,10 @@ impl Point {
 
     pub fn step_by(&self, dir: &Dir, count: i32) -> Point {
         match dir {
-            Dir::Up => Point {
-                x: self.x,
-                y: self.y + count,
-            },
-            Dir::Down => Point {
-                x: self.x,
-                y: self.y - count,
-            },
-            Dir::Right => Point {
-                x: self.x + count,
-                y: self.y,
-            },
-            Dir::Left => Point {
-                x: self.x - count,
-                y: self.y,
-            },
+            Dir::Up    => Point::new(self.x, self.y + count),
+            Dir::Down  => Point::new(self.x, self.y - count),
+            Dir::Right => Point::new(self.x + count, self.y),
+            Dir::Left  => Point::new(self.x - count, self.y),
         }
     }
 
