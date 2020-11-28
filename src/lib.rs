@@ -70,6 +70,8 @@ fn aoc_should_not_smoke() {
     let utils = Utilities::new();
     utils.names().iter()
         .filter(|n| n.starts_with("aoc_"))
+        // this one takes ~5 seconds, so skip it
+        .filter(|&&n| n != "aoc_2019_13")
         .for_each(|&n| {
             println!("-- {} --------------------------------------------", n);
             if let Ok(_) = std::fs::read_to_string(n.to_owned() + ".txt") {
