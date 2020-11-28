@@ -4,10 +4,10 @@ use std::thread;
 use ship::Ship;
 
 use crate::cli;
-use crate::geom2d::{Dir, Turn};
 use crate::geom2d::Point;
-use crate::intcode::{Machine, Program};
+use crate::geom2d::{Dir, Turn};
 use crate::intcode;
+use crate::intcode::{Machine, Program};
 
 mod ship;
 
@@ -31,7 +31,8 @@ pub fn run() {
 
 #[derive(Copy, Clone)]
 pub enum Color {
-    Black, White,
+    Black,
+    White,
 }
 
 fn run_bot(orig_prog: &Program, ship: &mut Ship) {
@@ -62,11 +63,14 @@ fn run_bot(orig_prog: &Program, ship: &mut Ship) {
             Err(_) => break,
         }
         match stdout.recv() {
-            Ok(c) => ship.paint(pos, match c {
-                0 => Color::Black,
-                1 => Color::White,
-                _ => panic!("Unrecognized color: {}", c),
-            }),
+            Ok(c) => ship.paint(
+                pos,
+                match c {
+                    0 => Color::Black,
+                    1 => Color::White,
+                    _ => panic!("Unrecognized color: {}", c),
+                },
+            ),
             // Err(e) => break,
             Err(_) => break,
         }
@@ -78,12 +82,12 @@ fn run_bot(orig_prog: &Program, ship: &mut Ship) {
                     _ => panic!("Unrecognized turn direction: {}", d),
                 });
                 pos = pos.step(&facing);
-            },
+            }
             Err(e) => panic!("Failed to read turn direction: {}", e),
         }
     }
     match thread.join() {
         Ok(_) => {}
-        Err(e) => panic!("Failed to join thread: {:?}", e)
+        Err(e) => panic!("Failed to join thread: {:?}", e),
     }
 }

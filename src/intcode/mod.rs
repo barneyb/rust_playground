@@ -35,7 +35,9 @@ pub struct Machine {
 }
 
 enum Mode {
-    Position, Immediate, Relative,
+    Position,
+    Immediate,
+    Relative,
 }
 
 #[allow(dead_code)]
@@ -69,7 +71,6 @@ fn one_off(prog: &Program, input: Option<Buffer>) -> (Machine, Buffer) {
 }
 
 impl Machine {
-
     pub fn new(program: &Program) -> Machine {
         Machine {
             ip: 0,
@@ -108,21 +109,26 @@ impl Machine {
             2 => self.binary_op(Int::mul),
             3 => {
                 let pos = self.next_position();
-                self.write_addr(pos, match &self.stdin {
-                    // I'm just gonna decree that nothing should take more than one second to catch
-                    // back up with another concurrent piece, so if we hit that threshold it means
-                    // there's a race/deadlock in the _logic_.
-                    Some(rx) => rx.recv_timeout(Duration::from_secs(1)).expect("Failed to read from STDIN"),
-                    None => panic!("No STDIN is connected"),
-                });
-            },
+                self.write_addr(
+                    pos,
+                    match &self.stdin {
+                        // I'm just gonna decree that nothing should take more than one second to catch
+                        // back up with another concurrent piece, so if we hit that threshold it means
+                        // there's a race/deadlock in the _logic_.
+                        Some(rx) => rx
+                            .recv_timeout(Duration::from_secs(1))
+                            .expect("Failed to read from STDIN"),
+                        None => panic!("No STDIN is connected"),
+                    },
+                );
+            }
             4 => {
                 let value = self.next_param();
                 match &self.stdout {
                     Some(tx) => tx.send(value).expect("Failed to send to STDOUT"),
                     None => println!("{}", value),
                 }
-            },
+            }
             5 => self.conditional_jump_op(|a| a != 0),
             6 => self.conditional_jump_op(|a| a == 0),
             7 => self.binary_op(|a, b| if a < b { 1 } else { 0 }),
@@ -173,7 +179,7 @@ impl Machine {
         match m {
             0 => Position,
             1 => Immediate, // immediate
-            2 => Relative, // relative
+            2 => Relative,  // relative
             md => panic!("Unknown parameter mode {}", md),
         }
     }
@@ -197,7 +203,8 @@ impl Machine {
     }
 
     fn binary_op<F>(&mut self, mut op: F)
-        where F: FnMut(Int, Int) -> Int
+    where
+        F: FnMut(Int, Int) -> Int,
     {
         let a = self.next_param();
         let b = self.next_param();
@@ -206,7 +213,8 @@ impl Machine {
     }
 
     fn conditional_jump_op<F>(&mut self, mut test: F)
-        where F: FnMut(Int) -> bool
+    where
+        F: FnMut(Int) -> bool,
     {
         let a = self.next_param();
         let b = self.next_param();
@@ -222,5 +230,4 @@ impl Machine {
     pub fn running(&self) -> bool {
         self.ip < self.program.len()
     }
-
 }

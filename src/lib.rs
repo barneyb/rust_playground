@@ -1,9 +1,5 @@
 use std::collections::HashMap;
 
-pub mod cli;
-pub mod fs;
-mod guess_number;
-mod temp_convert;
 mod aoc_2019_01;
 mod aoc_2019_02;
 mod aoc_2019_03;
@@ -15,8 +11,12 @@ mod aoc_2019_09;
 mod aoc_2019_11;
 mod aoc_2019_13;
 mod aoc_2019_22;
+pub mod cli;
+pub mod fs;
 mod geom2d;
+mod guess_number;
 mod intcode;
+mod temp_convert;
 
 pub struct Utilities<'a> {
     utilities: HashMap<&'a str, fn()>,
@@ -24,7 +24,6 @@ pub struct Utilities<'a> {
 }
 
 impl<'a> Utilities<'a> {
-
     pub fn new() -> Utilities<'a> {
         let mut utilities: HashMap<&str, fn()> = HashMap::new();
         // todo: "add Sally to Engineering" / "show Engineering" interface
@@ -45,14 +44,9 @@ impl<'a> Utilities<'a> {
         utilities.insert("aoc_2019_11", aoc_2019_11::run);
         utilities.insert("aoc_2019_13", aoc_2019_13::run);
         utilities.insert("aoc_2019_22", aoc_2019_22::run);
-        let mut names: Vec<&str> = utilities.iter()
-            .map(|(k, _)| *k)
-            .collect();
+        let mut names: Vec<&str> = utilities.iter().map(|(k, _)| *k).collect();
         names.sort_unstable();
-        Utilities {
-            utilities,
-            names,
-        }
+        Utilities { utilities, names }
     }
 
     pub fn names(&self) -> &Vec<&str> {
@@ -62,13 +56,14 @@ impl<'a> Utilities<'a> {
     pub fn by_name(&self, name: &str) -> Option<&fn()> {
         self.utilities.get(name)
     }
-
 }
 
 #[test]
 fn aoc_should_not_smoke() {
     let utils = Utilities::new();
-    utils.names().iter()
+    utils
+        .names()
+        .iter()
         .filter(|n| n.starts_with("aoc_"))
         // this one takes ~5 seconds, so skip it
         .filter(|&&n| n != "aoc_2019_13")

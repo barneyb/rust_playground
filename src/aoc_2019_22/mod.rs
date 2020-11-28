@@ -1,5 +1,5 @@
-use crate::fs;
 use crate::cli;
+use crate::fs;
 
 #[cfg(test)]
 mod test;
@@ -73,7 +73,7 @@ fn inverse(a: i64, n: i64) -> i64 {
         let quotient = r / newr;
         let pt = t;
         t = newt;
-        newt = pt  - quotient * newt;
+        newt = pt - quotient * newt;
         let pr = r;
         r = newr;
         newr = pr - quotient * newr;
@@ -114,18 +114,16 @@ impl Op {
 }
 
 fn parse() -> Vec<Op> {
-    fs::read_lines(
-        cli::aoc_filename("aoc_2019_22.txt"),
-        |s| {
-            if s == "deal into new stack" {
-                Op::Reverse()
-            } else if s.starts_with("cut") {
-                Op::Cut(s.split(' ').last().unwrap().parse().unwrap())
-            } else if s.starts_with("deal") {
-                Op::Deal(s.split(' ').last().unwrap().parse().unwrap())
-            } else {
-                panic!("Unrecognized shuffle '{}'", s)
-            }
+    fs::read_lines(cli::aoc_filename("aoc_2019_22.txt"), |s| {
+        if s == "deal into new stack" {
+            Op::Reverse()
+        } else if s.starts_with("cut") {
+            Op::Cut(s.split(' ').last().unwrap().parse().unwrap())
+        } else if s.starts_with("deal") {
+            Op::Deal(s.split(' ').last().unwrap().parse().unwrap())
+        } else {
+            panic!("Unrecognized shuffle '{}'", s)
         }
-    ).unwrap()
+    })
+    .unwrap()
 }

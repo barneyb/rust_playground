@@ -2,16 +2,19 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub enum Turn {
-    CounterClockWise, ClockWise,
+    CounterClockWise,
+    ClockWise,
 }
 
 #[derive(Debug)]
 pub enum Dir {
-    Up, Down, Right, Left,
+    Up,
+    Down,
+    Right,
+    Left,
 }
 
 impl Dir {
-
     pub fn turn(&self, t: Turn) -> Dir {
         match t {
             Turn::CounterClockWise => match self {
@@ -28,7 +31,6 @@ impl Dir {
             },
         }
     }
-
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
@@ -44,7 +46,6 @@ impl Display for Point {
 }
 
 impl Point {
-
     pub fn origin() -> Point {
         Point::new(0, 0)
     }
@@ -58,6 +59,7 @@ impl Point {
     }
 
     pub fn step_by(&self, dir: &Dir, count: i32) -> Point {
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         match dir {
             Dir::Up    => Point::new(self.x, self.y + count),
             Dir::Down  => Point::new(self.x, self.y - count),
@@ -69,5 +71,4 @@ impl Point {
     pub fn manhattan_distance(&self) -> i32 {
         self.x.abs() + self.y.abs()
     }
-
 }

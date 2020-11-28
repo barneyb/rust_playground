@@ -4,7 +4,7 @@ use std::thread;
 
 use crate::cli;
 use crate::intcode;
-use crate::intcode::{Int, Machine, one_off_output, Program};
+use crate::intcode::{one_off_output, Int, Machine, Program};
 
 #[cfg(test)]
 mod test;
@@ -16,8 +16,14 @@ pub fn run() {
     let filename = cli::aoc_filename("aoc_2019_07.txt");
     let prog = intcode::read_from_file(filename);
 
-    println!("{:?}", find_optimal_phase_settings(&prog, PHASES_SINGLE, thruster_signal));
-    println!("{:?}", find_optimal_phase_settings(&prog, PHASES_FEEDBACK, thruster_signal_with_feedback));
+    println!(
+        "{:?}",
+        find_optimal_phase_settings(&prog, PHASES_SINGLE, thruster_signal)
+    );
+    println!(
+        "{:?}",
+        find_optimal_phase_settings(&prog, PHASES_FEEDBACK, thruster_signal_with_feedback)
+    );
 }
 
 type PhaseSettings = [Int; 5];
@@ -28,8 +34,13 @@ struct OptimalPhaseSettings {
     signal: Int,
 }
 
-fn find_optimal_phase_settings<F>(prog: &Program, settings: PhaseSettings, generator: F) -> OptimalPhaseSettings
-where F: Fn(&Program, &PhaseSettings) -> Int
+fn find_optimal_phase_settings<F>(
+    prog: &Program,
+    settings: PhaseSettings,
+    generator: F,
+) -> OptimalPhaseSettings
+where
+    F: Fn(&Program, &PhaseSettings) -> Int,
 {
     let mut best = OptimalPhaseSettings {
         settings: [0, 0, 0, 0, 0],
@@ -100,7 +111,6 @@ impl Iterator for AllPhaseSettings {
         }
         None
     }
-
 }
 
 fn thruster_signal(prog: &Program, phase_settings: &PhaseSettings) -> Int {
@@ -129,7 +139,9 @@ fn thruster_signal_with_feedback(orig_prog: &Program, phase_settings: &PhaseSett
         s.send(*p).expect("failed to send phase setting")
     }
 
-    senders.front().unwrap()
+    senders
+        .front()
+        .unwrap()
         .send(0)
         .expect("failed to send initial signal");
 
@@ -140,9 +152,7 @@ fn thruster_signal_with_feedback(orig_prog: &Program, phase_settings: &PhaseSett
     receivers.rotate_right(1);
 
     let mut threads = Vec::new();
-    for (tx, rx) in senders
-        .into_iter()
-        .zip(receivers) {
+    for (tx, rx) in senders.into_iter().zip(receivers) {
         let mut prog = orig_prog.clone();
         threads.push(thread::spawn(move || {
             let mut m = Machine::new(&mut prog);

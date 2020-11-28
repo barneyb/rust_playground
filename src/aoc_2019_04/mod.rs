@@ -1,4 +1,5 @@
 use std::fs;
+
 use crate::cli;
 
 pub fn run() {
@@ -38,7 +39,7 @@ fn test(n: i32) -> Result {
             return Result {
                 accept: false,
                 skip: (curr - last) * place,
-            }
+            };
         }
         rest /= 10;
         place *= 10;
@@ -62,13 +63,11 @@ fn test(n: i32) -> Result {
     return Result {
         accept: doubled_digit >= 0,
         skip: 1,
-    }
+    };
 }
 
 fn parse() -> (i32, i32) {
-    let parts = fs::read_to_string(
-        cli::aoc_filename("aoc_2019_04.txt")
-    )
+    let parts = fs::read_to_string(cli::aoc_filename("aoc_2019_04.txt"))
         .unwrap()
         .trim()
         .split('-')
@@ -87,5 +86,4 @@ mod tests {
         assert!(!test(677789).accept);
         assert!(test(677889).accept);
     }
-
 }

@@ -1,4 +1,5 @@
 use std::fs;
+
 use crate::cli;
 
 #[cfg(test)]
@@ -13,7 +14,8 @@ pub fn run() {
 }
 
 fn part_one(img: &Image) -> usize {
-    let zeroy_layer = img.layers()
+    let zeroy_layer = img
+        .layers()
         .fold((usize::max_value(), None), |(min, prev), l| {
             let n = l.count_of(0);
             if n < min {
@@ -21,7 +23,9 @@ fn part_one(img: &Image) -> usize {
             } else {
                 (min, prev)
             }
-        }).1.unwrap();
+        })
+        .1
+        .unwrap();
     zeroy_layer.count_of(1) * zeroy_layer.count_of(2)
 }
 
@@ -66,7 +70,6 @@ const WHITE: u8 = 1;
 const TRANSPARENT: u8 = 2;
 
 impl Image {
-
     pub fn layer_count(&self) -> usize {
         self.digits.len() / self.layer_size()
     }
@@ -93,23 +96,19 @@ impl Image {
     }
 
     pub fn flatten(&self) -> Image {
-        let digits = self.get_layer(0)
-            .data
-            .to_vec();
-        let digits = self.layers()
-            .skip(1)
-            .fold(digits, |ds, l|
-                ds.iter()
-                    .zip(l.data)
-                    .map(|(&bg, &d)|
-                        if d != TRANSPARENT && bg == TRANSPARENT {
-                            d
-                        } else {
-                            bg
-                        }
-                    )
-                    .collect()
-            );
+        let digits = self.get_layer(0).data.to_vec();
+        let digits = self.layers().skip(1).fold(digits, |ds, l| {
+            ds.iter()
+                .zip(l.data)
+                .map(|(&bg, &d)| {
+                    if d != TRANSPARENT && bg == TRANSPARENT {
+                        d
+                    } else {
+                        bg
+                    }
+                })
+                .collect()
+        });
         Image {
             width: self.width,
             height: self.height,
@@ -118,7 +117,8 @@ impl Image {
     }
 
     pub fn invert(&self) -> Image {
-        let digits = self.digits
+        let digits = self
+            .digits
             .iter()
             .map(|&d| match d {
                 BLACK => WHITE,
@@ -132,7 +132,6 @@ impl Image {
             digits,
         }
     }
-
 }
 
 struct Layers<'a> {
@@ -145,7 +144,7 @@ impl<'a> Iterator for Layers<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.curr >= self.image.layer_count() {
-            return None
+            return None;
         }
         let i = self.curr;
         self.curr += 1;
@@ -171,15 +170,20 @@ struct Layer<'a> {
 }
 
 impl Layer<'_> {
-
     pub fn count_of(&self, digit: u8) -> usize {
         self.data.iter().filter(|&&d| d == digit).count()
     }
-
 }
 
 fn parse(width: usize, height: usize, data: &str) -> Image {
-    println!("parse {}x{} w/ {} digits: {}...{}", width, height, data.len(), &data[0..5], &data[(data.len() - 5)..data.len()]);
+    println!(
+        "parse {}x{} w/ {} digits: {}...{}",
+        width,
+        height,
+        data.len(),
+        &data[0..5],
+        &data[(data.len() - 5)..data.len()]
+    );
     assert_eq!(0, data.len() % (width * height));
     let mut digits: Vec<u8> = Vec::new();
     digits.reserve(data.len());

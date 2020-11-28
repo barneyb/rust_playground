@@ -1,7 +1,7 @@
 pub fn run() {
-    use std::io;
-    use std::cmp::Ordering;
     use rand::Rng;
+    use std::cmp::Ordering;
+    use std::io;
 
     let secret_number = rand::thread_rng().gen_range(0, 100) + 1;
 
@@ -22,7 +22,7 @@ pub fn run() {
             n
         } else {
             println!("Try an integer?");
-            continue
+            continue;
         };
 
         match guess.cmp(&secret_number) {
@@ -31,7 +31,7 @@ pub fn run() {
             Ordering::Equal => {
                 println!("You win!");
                 break;
-            },
+            }
         }
     }
 }

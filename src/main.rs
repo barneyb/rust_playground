@@ -1,6 +1,7 @@
-use rust_playground::Utilities;
-use rust_playground::cli;
 use std::io;
+
+use rust_playground::cli;
+use rust_playground::Utilities;
 
 fn main() {
     let utils = Utilities::new();
@@ -32,7 +33,7 @@ fn main() {
 
 fn handle_input(utils: &Utilities, input: &String) -> Result<usize, String> {
     if "q\n" == input {
-        return Ok(0)
+        return Ok(0);
     }
     let mut nori = input.trim();
     if let Ok(i) = nori.parse::<usize>() {

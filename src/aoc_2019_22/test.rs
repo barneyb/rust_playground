@@ -49,6 +49,7 @@ fn undeal() {
 
 #[test]
 fn example_one() {
+    #[cfg_attr(rustfmt, rustfmt_skip)]
     let ops = vec![
         Op::Deal(7),
         Op::Reverse(),
@@ -99,7 +100,6 @@ fn table() {
             }
         }
     }
-
 
     let mut result = Vec::new();
     for idx in 0..deck_size {

@@ -24,20 +24,20 @@ fn layers_next() {
     let img = parse(2, 2, "111122223333");
     let mut itr = img.layers();
     match itr.next() {
-        Some(_) => {},
+        Some(_) => {}
         _ => panic!("premature exhaustion!"),
     }
     match itr.next() {
-        Some(_) => {},
+        Some(_) => {}
         _ => panic!("premature exhaustion!"),
     }
     match itr.next() {
-        Some(_) => {},
+        Some(_) => {}
         _ => panic!("premature exhaustion!"),
     }
     for _ in 0..2 {
         match itr.next() {
-            None => {},
+            None => {}
             _ => panic!("delayed exhaustion!"),
         }
     }
@@ -73,7 +73,7 @@ fn layers_nth() {
         _ => panic!("premature exhaustion!"),
     }
     match itr.nth(0) {
-        None => {},
+        None => {}
         _ => panic!("delayed exhaustion!"),
     }
 }
@@ -84,7 +84,7 @@ fn layers_nth_out_of_bounds() {
     let img = parse(2, 2, "111122223333");
     let mut itr = img.layers();
     match itr.nth(42) {
-        None => {},
+        None => {}
         _ => panic!("delayed exhaustion!"),
     }
 }
@@ -98,8 +98,11 @@ fn example_two() {
     println!("{}", render_layer(&img.get_layer(3)));
     let flat = img.flatten();
     println!("{}", render_layer(&flat.get_layer(0)));
-    assert_eq!("+----+\n\
-                |  # |\n\
-                | #  |\n\
-                +----+\n", part_two(&img))
+    assert_eq!(
+        "+----+\n\
+         |  # |\n\
+         | #  |\n\
+         +----+\n",
+        part_two(&img)
+    )
 }

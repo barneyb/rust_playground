@@ -17,7 +17,7 @@ pub fn run() {
                 break 'outer;
             }
         }
-    };
+    }
     println!("Part Two: {}", result);
 }
 

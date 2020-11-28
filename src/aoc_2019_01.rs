@@ -1,23 +1,17 @@
-use crate::fs;
 use crate::cli;
+use crate::fs;
 
 pub fn run() {
-    let masses: Vec<usize> = fs::read_lines(
-        cli::aoc_filename("aoc_2019_01.txt"),
-        |l| l.parse::<usize>().unwrap()
-    ).unwrap();
+    let masses: Vec<usize> = fs::read_lines(cli::aoc_filename("aoc_2019_01.txt"), |l| {
+        l.parse::<usize>().unwrap()
+    })
+    .unwrap();
 
-    let fuel: usize = masses
-        .iter()
-        .map(needed_fuel)
-        .sum();
+    let fuel: usize = masses.iter().map(needed_fuel).sum();
 
     println!("Fuel needed: {}", fuel);
 
-    let fuel: usize = masses
-        .iter()
-        .map(actually_needed_fuel)
-        .sum();
+    let fuel: usize = masses.iter().map(actually_needed_fuel).sum();
 
     println!("Fuel ACTUALLY needed: {}", fuel);
 }

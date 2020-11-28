@@ -14,9 +14,14 @@ pub fn run() {
             n
         } else {
             println!("Try a number?");
-            continue
+            continue;
         };
-        println!("{}F is {:.1}C, and {0}C is {:.1}F", input, f2c(input), c2f(input));
+        println!(
+            "{}F is {:.1}C, and {0}C is {:.1}F",
+            input,
+            f2c(input),
+            c2f(input)
+        );
     }
 }
 
