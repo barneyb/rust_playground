@@ -33,8 +33,8 @@ impl Dir {
 
 #[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
 pub struct Point {
-    x: i32,
-    y: i32,
+    pub x: i32,
+    pub y: i32,
 }
 
 impl Display for Point {
@@ -46,10 +46,10 @@ impl Display for Point {
 impl Point {
 
     pub fn origin() -> Point {
-        Point::at(0, 0)
+        Point::new(0, 0)
     }
 
-    pub fn at(x: i32, y: i32) -> Point {
+    pub fn new(x: i32, y: i32) -> Point {
         Point { x, y }
     }
 

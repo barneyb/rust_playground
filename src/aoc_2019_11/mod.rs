@@ -2,6 +2,7 @@ use bot::Bot;
 use ship::Ship;
 
 use crate::cli;
+use crate::geom2d::Point;
 use crate::intcode;
 
 mod ship;
@@ -15,6 +16,12 @@ pub fn run() {
     let mut bot = Bot::new(&prog, &mut ship);
     bot.run();
     println!("Panels painted: {}", ship.painted_panel_count());
+
+    let mut ship = Ship::new();
+    ship.paint(Point::origin(), Color::White);
+    let mut bot = Bot::new(&prog, &mut ship);
+    bot.run();
+    println!("{}", ship);
 }
 
 #[derive(Copy, Clone)]
