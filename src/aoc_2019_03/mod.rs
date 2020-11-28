@@ -1,8 +1,9 @@
-use crate::fs;
-use crate::cli;
-use crate::point2d::{Dir, Point};
-use std::collections::HashMap;
 use std::collections::hash_map::RandomState;
+use std::collections::HashMap;
+
+use crate::cli;
+use crate::fs;
+use crate::geom2d::{Dir, Point};
 
 pub fn run() {
     let wires: Vec<Vec<Step>> = fs::read_lines(

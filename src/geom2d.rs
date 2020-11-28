@@ -1,8 +1,34 @@
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
+pub enum Turn {
+    CounterClockWise, ClockWise,
+}
+
+#[derive(Debug)]
 pub enum Dir {
     Up, Down, Right, Left,
+}
+
+impl Dir {
+
+    pub fn turn(&self, t: Turn) -> Dir {
+        match t {
+            Turn::CounterClockWise => match self {
+                Dir::Up => Dir::Left,
+                Dir::Down => Dir::Right,
+                Dir::Right => Dir::Up,
+                Dir::Left => Dir::Down,
+            },
+            Turn::ClockWise => match self {
+                Dir::Up => Dir::Right,
+                Dir::Down => Dir::Left,
+                Dir::Right => Dir::Down,
+                Dir::Left => Dir::Up,
+            },
+        }
+    }
+
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::ops::{Add, Mul};
 use std::sync::mpsc;
+use std::time::Duration;
 
 use crate::intcode::Mode::{Immediate, Position, Relative};
 
@@ -91,7 +92,7 @@ impl Machine {
 
     /// I execute the program, and return my STDIN
     pub fn run(&mut self) -> Option<RxInt> {
-        while !self.halted() {
+        while self.running() {
             self.step();
         }
         self.stdout = None;
@@ -108,7 +109,10 @@ impl Machine {
             3 => {
                 let pos = self.next_position();
                 self.write_addr(pos, match &self.stdin {
-                    Some(rx) => rx.recv().expect("Failed to read from STDIN"),
+                    // I'm just gonna decree that nothing should take more than one second to catch
+                    // back up with another concurrent piece, so if we hit that threshold it means
+                    // there's a race/deadlock in the _logic_.
+                    Some(rx) => rx.recv_timeout(Duration::from_secs(1)).expect("Failed to read from STDIN"),
                     None => panic!("No STDIN is connected"),
                 });
             },
@@ -211,8 +215,12 @@ impl Machine {
         }
     }
 
-    fn halted(&self) -> bool {
-        self.ip >= self.program.len()
+    pub fn halted(&self) -> bool {
+        !self.running()
+    }
+
+    pub fn running(&self) -> bool {
+        self.ip < self.program.len()
     }
 
 }
