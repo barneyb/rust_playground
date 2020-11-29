@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::ops::{Add, Mul};
 use std::sync::mpsc;
+use std::thread;
 use std::time::Duration;
 
 use crate::intcode::Mode::{Immediate, Position, Relative};
@@ -14,6 +15,7 @@ pub type Program = Vec<Int>;
 pub type Buffer = Vec<Int>;
 pub type TxInt = mpsc::Sender<Int>;
 pub type RxInt = mpsc::Receiver<Int>;
+use std::thread::JoinHandle;
 
 pub fn read_from_file(filename: String) -> Program {
     fs::read_to_string(filename)
@@ -22,6 +24,36 @@ pub fn read_from_file(filename: String) -> Program {
         .split(',')
         .map(|a| a.parse().expect(&format!("couldn't parse '{}'", a)))
         .collect()
+}
+
+pub struct Processor {
+    pub stdin: TxInt,
+    pub stdout: RxInt,
+    thread: JoinHandle<Machine>,
+}
+
+/// I encapsulate an Intcode machine in an isolated thread, with STDIN and STDOUT channels.
+impl Processor {
+    pub fn new(program: Program) -> Processor {
+        let (stdin, rx) = mpsc::channel();
+        let (tx, stdout) = mpsc::channel();
+        let thread = thread::spawn(move || {
+            let mut m = Machine::new(&program);
+            m.with_stdin(rx);
+            m.with_stdout(tx);
+            m.run();
+            m
+        });
+        Processor {
+            stdin,
+            stdout,
+            thread,
+        }
+    }
+
+    pub fn join(self) -> thread::Result<Machine> {
+        self.thread.join()
+    }
 }
 
 pub struct Machine {

@@ -1,13 +1,10 @@
-use std::sync::mpsc;
-use std::thread;
-
 use ship::Ship;
 
 use crate::cli;
 use crate::geom2d::Point;
 use crate::geom2d::{Dir, Turn};
 use crate::intcode;
-use crate::intcode::{Machine, Program};
+use crate::intcode::{Program, Processor};
 
 mod ship;
 
@@ -36,15 +33,7 @@ pub enum Color {
 }
 
 fn run_bot(orig_prog: &Program, ship: &mut Ship) {
-    let (stdin, rx) = mpsc::channel();
-    let (tx, stdout) = mpsc::channel();
-    let prog = orig_prog.clone();
-    let thread = thread::spawn(move || {
-        let mut machine = Machine::new(&prog);
-        machine.with_stdin(rx);
-        machine.with_stdout(tx);
-        machine.run();
-    });
+    let proc = Processor::new(orig_prog.clone());
     let mut pos = Point::origin();
     let mut facing = Dir::Up;
     loop {
@@ -58,11 +47,11 @@ fn run_bot(orig_prog: &Program, ship: &mut Ship) {
         //
         // The net is that a failure must be checked at either point, though it's far more likely at
         // the receive site. Because of the mem::take in Machine::run?
-        match stdin.send(curr_color) {
+        match proc.stdin.send(curr_color) {
             Ok(_) => {}
             Err(_) => break,
         }
-        match stdout.recv() {
+        match proc.stdout.recv() {
             Ok(c) => ship.paint(
                 pos,
                 match c {
@@ -74,7 +63,7 @@ fn run_bot(orig_prog: &Program, ship: &mut Ship) {
             // Err(e) => break,
             Err(_) => break,
         }
-        match stdout.recv() {
+        match proc.stdout.recv() {
             Ok(d) => {
                 facing = facing.turn(match d {
                     0 => Turn::CounterClockWise,
@@ -86,7 +75,7 @@ fn run_bot(orig_prog: &Program, ship: &mut Ship) {
             Err(e) => panic!("Failed to read turn direction: {}", e),
         }
     }
-    match thread.join() {
+    match proc.join() {
         Ok(_) => {}
         Err(e) => panic!("Failed to join thread: {:?}", e),
     }
