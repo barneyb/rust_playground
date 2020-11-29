@@ -4,36 +4,60 @@ use std::fmt::{Display, Formatter};
 
 use crate::geom2d::Point;
 
-use super::Color;
-
-pub struct Ship {
-    panels: HashMap<Point, Color>,
+pub trait ToChar {
+    fn to_char(&self) -> char;
 }
 
-impl Ship {
-    pub fn new() -> Ship {
-        Ship {
+pub enum BW {
+    Black,
+    White,
+}
+
+impl ToChar for BW {
+    fn to_char(&self) -> char {
+        match self {
+            BW::Black => ' ',
+            BW::White => '#',
+        }
+    }
+}
+
+impl ToChar for char {
+    fn to_char(&self) -> char {
+        *self
+    }
+}
+
+pub struct Plane<C> {
+    panels: HashMap<Point, C>,
+    default_paint: C,
+}
+
+impl<C> Plane<C> {
+    pub fn new(default_paint: C) -> Plane<C> {
+        Plane {
             panels: HashMap::new(),
+            default_paint,
         }
     }
 
-    pub fn paint(&mut self, p: Point, c: Color) {
+    pub fn paint(&mut self, p: Point, c: C) {
         self.panels.insert(p, c);
     }
 
-    pub fn get_color(&self, p: Point) -> Color {
+    pub fn get_paint(&self, p: Point) -> &C {
         match self.panels.get(&p) {
-            Some(&c) => c,
-            None => Color::Black,
+            Some(c) => c,
+            None => &self.default_paint,
         }
     }
 
-    pub fn painted_panel_count(&self) -> usize {
+    pub fn paint_count(&self) -> usize {
         self.panels.len()
     }
 }
 
-impl Display for Ship {
+impl<C: ToChar> Display for Plane<C> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let (min, max) =
             self.panels
@@ -52,10 +76,7 @@ impl Display for Ship {
             for x in min.x..=max.x {
                 let p = Point::new(x, y);
                 result.push(match self.panels.get(&p) {
-                    Some(c) => match c {
-                        Color::Black => ' ',
-                        Color::White => '#',
-                    },
+                    Some(c) => c.to_char(),
                     None => ' ',
                 })
             }

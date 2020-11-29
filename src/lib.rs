@@ -16,6 +16,7 @@ pub mod fs;
 mod geom2d;
 mod guess_number;
 mod intcode;
+mod plane;
 mod temp_convert;
 
 pub struct Utilities<'a> {
