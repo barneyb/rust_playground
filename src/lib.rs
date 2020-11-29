@@ -10,6 +10,7 @@ mod aoc_2019_08;
 mod aoc_2019_09;
 mod aoc_2019_11;
 mod aoc_2019_13;
+mod aoc_2019_15;
 mod aoc_2019_22;
 pub mod cli;
 pub mod fs;
@@ -44,6 +45,7 @@ impl<'a> Utilities<'a> {
         utilities.insert("aoc_2019_09", aoc_2019_09::run);
         utilities.insert("aoc_2019_11", aoc_2019_11::run);
         utilities.insert("aoc_2019_13", aoc_2019_13::run);
+        utilities.insert("aoc_2019_15", aoc_2019_15::run);
         utilities.insert("aoc_2019_22", aoc_2019_22::run);
         let mut names: Vec<&str> = utilities.iter().map(|(k, _)| *k).collect();
         names.sort_unstable();

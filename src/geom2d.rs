@@ -71,4 +71,13 @@ impl Point {
     pub fn manhattan_distance(&self) -> i32 {
         self.x.abs() + self.y.abs()
     }
+
+    pub fn min(&self, p: Point) -> Point {
+        Point::new(self.x.min(p.x), self.y.min(p.y))
+    }
+
+    pub fn max(&self, p: Point) -> Point {
+        Point::new(self.x.max(p.x), self.y.max(p.y))
+    }
+
 }
